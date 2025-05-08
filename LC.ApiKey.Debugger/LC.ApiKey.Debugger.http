@@ -1,0 +1,11 @@
+@LC.ApiKey.Auth_HostAddress = http://localhost:5217
+
+GET {{LC.ApiKey.Auth_HostAddress}}/weatherforecast/
+Accept: application/json
+X-API-Key: 6CBxzdYcEgNDrRhMbDpkBF7e4d4Kib46dwL9ZE5egiL0iL5Y3dzREUBSUYVUwUkN
+
+
+###
+#X-API-Key: 6CBxzdYcEgNDrRhMbDpkBF7e4d4Kib46dwL9ZE5egiL0iL5Y3dzREUBSUYVUwUkN
+#X-API-Key: my-secret-key
+#Authorization: Bearer 6CBxzdYcEgNDrRhMbDpkBF7e4d4Kib46dwL9ZE5egiL0iL5Y3dzREUBSUYVUwUkN
