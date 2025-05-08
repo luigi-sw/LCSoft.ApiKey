@@ -1,0 +1,50 @@
+name: 📘 User story
+description: A brief, plain-language explanation of a feature or functionality
+title: '📘 [User Story] - <title> '
+labels: [
+  "user story"
+]
+body:
+  - type: input
+    id: as-a
+    attributes:
+      label: "As a "
+      description: Please enter the perspective of the user of the story. 
+      placeholder: ex. end user
+    validations:
+      required: true
+  - type: textarea
+    id: i-want-to
+    attributes:
+      label: "I want to "
+      description: Please enter an explicit description of a feature or functionality
+      placeholder: Short and explicit description of your problem to be solved...
+    validations:
+      required: true
+  - type: textarea
+    id: so-i-can
+    attributes:
+      label: ", so I can "
+      description: Please enter an reason for feature or functionality
+      placeholder: Short and explicit description of the goal to be achieved...
+    validations:
+      required: true
+  - type: checkboxes
+    id: acceptance
+    attributes:
+      label: Acceptance criteria!
+      description: The Acceptance criteria is defined? 
+      options:
+        - label: This is something that can be verified to show that this user story is satisfied.
+          required: true
+  - type: checkboxes
+    id: sprint-ready
+    attributes:
+      label: Sprint Ready Checklist!
+      description: Check if this user story is ready to be add into the sprint. (DoR)
+      options:
+        - label: Acceptance criteria defined.
+        - label: Team understands acceptance criteria
+        - label: Team has defined solution / steps to satisfy acceptance criteria 
+        - label: Acceptance criteria is verifiable / testable 
+        - label: External / 3rd Party dependencies identified 

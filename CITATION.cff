@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - family-names: C. Filho
+    given-names: Luigi
+    portfolio: https://www.lcdesenvolvimentos.com.br
+title: "Repo"
+version: 0.0.1
+date-released: 2025-02-01
+url: "https://github.com/luigicfilho/repo"
