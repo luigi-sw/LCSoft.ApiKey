@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.Extensions.Configuration;
 using System.Net;
 
 namespace LC.ApiKey.Middleware;
@@ -11,14 +10,11 @@ public class ApiKeyMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly IApiKeyValidator _apiKeyValidation;
-    private readonly IConfiguration _configuration;
     public ApiKeyMiddleware(RequestDelegate next, 
-                            IApiKeyValidator apiKeyValidation,
-                            IConfiguration configuration)
+                            IApiKeyValidator apiKeyValidation)
     {
         _next = next;
         _apiKeyValidation = apiKeyValidation;
-        _configuration = configuration;
     }
     public async Task InvokeAsync(HttpContext context)
     {
@@ -58,20 +54,12 @@ public class ApiKeyMiddleware
             return;
         }
 
-        //if (!userService.ValidateApiKey(extractedApiKey))
-        //{
-        //    context.Response.StatusCode = 401;
-        //    await context.Response.WriteAsync("Unauthorized client.");
-        //    return;
-        //}
-
         if (string.IsNullOrWhiteSpace(apiKeyFromHttpHeader))
         {
             context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             return;
         }
 
-        //string? userApiKey = context.Request.Headers[Constants.ApiKeyHeaderName];
         if (!_apiKeyValidation.IsValid(apiKeyFromHttpHeader!))
         {
             context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;

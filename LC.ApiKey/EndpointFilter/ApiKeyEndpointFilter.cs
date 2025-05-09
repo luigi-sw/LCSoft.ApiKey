@@ -9,26 +9,24 @@ public class ApiKeyEndpointFilter(IApiKeyValidator apiKeyValidation) : IEndpoint
 
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
-        //string? apiKey = context.HttpContext.Request.Headers[Constants.ApiKeyHeaderName];
         bool success = context.HttpContext.Request.Headers.TryGetValue
             (Constants.ApiKeyHeaderName, out var apiKeyFromHttpHeader);
 
         if (!success)
         {
-           // return new UnauthorizedHttpObjectResult(AuthConstants.ApiKeyMissing);
-            return Results.Unauthorized();
+            return new UnauthorizedHttpObjectResult("ApiKey is missing.");
         }
 
         if (string.IsNullOrWhiteSpace(apiKeyFromHttpHeader))
         {
-            return Results.Unauthorized();
+            return new UnauthorizedHttpObjectResult("ApiKey is missing.");
         }
 
         string apiKey = apiKeyFromHttpHeader.ToString();
 
         if (!_apiKeyValidation.IsValid(apiKey))
         {
-            return Results.Unauthorized();
+            return new UnauthorizedHttpObjectResult("ApiKey is invalid.");
         }
 
         return await next(context);

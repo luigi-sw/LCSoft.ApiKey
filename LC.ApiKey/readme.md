@@ -10,15 +10,13 @@
 ## 🚀 Features ✨  
 
 - ✅ Simple API key validation for ASP.NET Core Web APIs
-- ✅ Easy integration with `ASP.NET Core` (6.0+)  
+- ✅ Easy integration with `ASP.NET Core` (9.0+)  
 - ✅ Lightweight and extensible  
 - ✅ Supports API key validation via:  
    - Header (`X-API-Key`)  
-   - Query string (`?apiKey=...`)  
    - Custom providers  
 - ✅ Support for custom header names  
-- ✅ Optional in-memory or configurable key storage  
-- ✅ Plug-and-play `IAuthorizationHandler` integration  
+- ✅ Optional in-memory or configurable key storage   
 - ✅ Minimal setup required  
 
 ---
@@ -28,59 +26,30 @@
 Install via NuGet Package Manager:
 
 ```bash
-dotnet add package ApiKeyAuthorization
+dotnet add package LC.ApiKey
 ```
 
 Or via the NuGet Package Manager Console:
 
 ```powershell
-Install-Package ApiKeyAuthorization
+Install-Package LC.ApiKey
 ```
 
 ## 🛠️ Setup
 
-### 1. Add Middleware and Services
+You can use this library with controller and minimal api, as a quick setup for apikey authorization as well as a standard policy for ApiKey Token.
 
-In your `Program.cs`, register the services:
+### 1. Add as basic services
 
-```csharp
-builder.Services.AddApiKeyAuthorization(options =>
-{
-    options.HeaderName = "X-API-KEY";
-    options.ValidApiKeys = new[] { "your-api-key-1", "your-api-key-2" };
-});
-```
+In your `Program.cs`, register the services, this will register the authorization filter to use with the [ApiKey] attribute and the IApiKeyValidator interface and service that will read the valid api key from appsettings configurations:
 
-### 2. Add the Authorization Policy
+This will work only when using Controllers.
 
 ```csharp
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("ApiKeyPolicy", policy =>
-    {
-        policy.Requirements.Add(new ApiKeyRequirement());
-    });
-});
+builder.Services.RegisterApiKeyFilterAuthorization();
 ```
 
-### 3. Apply to Controllers or Actions
-
-```csharp
-[Authorize(Policy = "ApiKeyPolicy")]
-[ApiController]
-[Route("api/[controller]")]
-public class SecureController : ControllerBase
-{
-    [HttpGet]
-    public IActionResult GetSecretData()
-    {
-        return Ok("This is protected data.");
-    }
-}
-```
-
-### 4. Using with Minimal APIs
-When using with your minimal apis, you get the option to inject into the authentication/authorization middleware and use as endpoint filter
+To do the same thing with minimal api you an use directly ApiKeyEndpointFilter as a Endpoint filter:
 
 ```csharp
 app.MapGet("/weatherforecast", () =>
@@ -99,7 +68,13 @@ app.MapGet("/weatherforecast", () =>
 .WithName("GetWeatherForecast");
 ```
 
-### 5. Using as custom middleware
+But then you need to register the IApiKeyValidator interface and the implementation, you can use the standard registring:
+
+```csharp
+builder.Services.RegisterApikeyServices();
+```
+
+### 2. Using as custom middleware
 You can use as custom middleware, this will work with controllers and minimal apis
 Use after app.UseHttpsRedirection(); and before any routing middleware.
 
@@ -109,12 +84,43 @@ app.UseMiddleware<ApiKeyMiddleware>();
 
 This will work with [AllowAnonymous] attribute and .AllowAnonymous() extension as well, any controller, action or endpoint marked as allow anonymous will be respected.
 
+But then you need to register the IApiKeyValidator interface and the implementation, you can use the standard registring:
+
+```csharp
+builder.Services.RegisterApikeyServices();
+```
+
+### 3. Add the Authorization Policy
+
+You can also add as a authorization policy, this options is the most flexible for this version, you can use just:
+
+```csharp
+builder.Services.RegisterApiKeyPolicyAuthorization();
+```
+
+This option will by default use the appsetting configuration as default, as well registring the basic IApiKeyValidator interface and implementation. For this version, this will get the configuration from "ApiKey" section, for example: {"ApiKey": "Your_Choosen_APIKEY"}.
+
+To register with more than one option of APIKEY, you can pass the list of allowed apikeys:
+
+```csharp
+var validApiKeys = List<string>() {"validapikey1", "validapikey2", "validapikey3"}
+builder.Services.RegisterApiKeyPolicyAuthorization(validApiKeys);
+```
+
+You also need to add the authorization and authentication middleware:
+
+```csharp
+app.UseAuthentication();
+app.UseAuthorization();
+```
+
 
 ## 🔐 How It Works
 
 - The package inspects the specified header (e.g., `X-API-KEY`)  
 - If the key is missing or invalid, access is denied  
 - You can easily extend the validation logic by implementing `IApiKeyValidator`  
+- The valid api key is unique and read from appsettings configuration the "ApiKey" section.
 
 ## 💡 Customization
 
@@ -137,41 +143,17 @@ Then register it:
 builder.Services.AddSingleton<IApiKeyValidator, CustomApiKeyValidator>();
 ```
 
-## Advanced Configuration ⚙️
-Custom Validation Logic
-Override IApiKeyValidator:
-
-```csharp
-builder.Services.AddSingleton<IApiKeyValidator, CustomApiKeyValidator>();
-```
-Environment-Based Keys
-Store keys in appsettings.json:
-
-```json
-{
-  "ApiKeySettings": {
-    "ApiKey": "Production-Key-Here"
-  }
-}
-```
-Then bind it:
-
-```csharp
-builder.Services.Configure<ApiKeySettings>(builder.Configuration.GetSection("ApiKeySettings"));
-```
-
 ###  Troubleshooting 🔧
 
 Error: Invalid API Key → Verify the key matches in requests.
 Missing Header → Ensure clients send X-API-Key.
 
+## 🙋 Support
+
 ## 📄 License
 
 This package is licensed under CC BY-NC-ND 4.0.
-Full License Text
 
-## 🙋 Support
-
-## Contribute ❤️
+## ❤️ Contribute 
 Found a bug? Want a feature?
 Open an Issue or submit a PR!

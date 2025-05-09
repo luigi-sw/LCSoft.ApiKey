@@ -57,6 +57,7 @@ public static class ApiKeyExtensions
         services.RegisterApikeyServices();
         return services;
     }
+    
     public static IServiceCollection RegisterApiKeyPolicyAuthentication(this IServiceCollection services, Action<ApiKeyAuthenticationOptions> options)
     {
         //services.AddAuthentication(Constants.AuthenticationScheme)

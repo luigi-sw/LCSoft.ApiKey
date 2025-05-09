@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Http.Features;
-using Microsoft.AspNetCore.Mvc.Filters;
+﻿using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using Microsoft.Extensions.Primitives;
+using Microsoft.Net.Http.Headers;
+using LC.ApiKey.Validation;
 
 namespace LC.ApiKey.Attribute;
 
@@ -18,10 +20,7 @@ public class CustomAuthorization : System.Attribute, IAuthorizationFilter
 
         if (filterContext != null)
         {
-            //get the authorization header  
-            Microsoft.Extensions.Primitives.StringValues authTokens;
-            filterContext.HttpContext.Request.Headers.TryGetValue("Authorization", out authTokens);
-
+            filterContext.HttpContext.Request.Headers.TryGetValue(HeaderNames.Authorization, out StringValues authTokens);
             var _token = authTokens.FirstOrDefault();
 
             if (_token != null)
@@ -29,71 +28,44 @@ public class CustomAuthorization : System.Attribute, IAuthorizationFilter
                 string authToken = _token;
                 if (authToken != null)
                 {
-                    if (IsValidToken(authToken))
+                    var apiKeyValidator = (IApiKeyValidator)filterContext.HttpContext.RequestServices.GetService(typeof(IApiKeyValidator))!;
+                    if (!apiKeyValidator!.IsValid(authToken))
                     {
-                        filterContext.HttpContext.Response.Headers.Add("Authorization", authToken);
-                        filterContext.HttpContext.Response.Headers.Add("AuthStatus", "Authorized");
-
-                        filterContext.HttpContext.Response.Headers.Add("storeAccessiblity", "Authorized");
-
-                        return;
-                    }
-                    else
-                    {
-                        filterContext.HttpContext.Response.Headers.Add("Authorization", authToken);
-                        filterContext.HttpContext.Response.Headers.Add("AuthStatus", "NotAuthorized");
-
                         filterContext.HttpContext.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-                        filterContext.HttpContext.Response.HttpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase = "Not Authorized";
                         filterContext.Result = new JsonResult("NotAuthorized")
                         {
                             Value = new
                             {
                                 Status = "Error",
-                                Message = "Invalid Token"
+                                Message = "The Api key is incorrect : Unauthorized access"
                             },
                         };
+                        return;
                     }
-
                 }
-
             }
             else
             {
                 //if the request header doesn't contain the authorization header, try to get the API-Key.  
-                Microsoft.Extensions.Primitives.StringValues apikey;
-                var key = filterContext.HttpContext.Request.Headers.TryGetValue("ApiKey", out apikey);
+                var key = filterContext.HttpContext.Request.Headers.TryGetValue(Constants.ApiKeyHeaderName, out StringValues apikey);
                 var keyvalue = apikey.FirstOrDefault();
 
                 //if the API-Key value is not null. validate the API-Key.  
-                if (keyvalue != null)
+                var apiKeyValidator = (IApiKeyValidator)filterContext.HttpContext.RequestServices.GetService(typeof(IApiKeyValidator))!;
+                if (!apiKeyValidator!.IsValid(keyvalue!))
                 {
-                    filterContext.HttpContext.Response.Headers.Add("ApiKey", keyvalue);
-                    filterContext.HttpContext.Response.Headers.Add("AuthStatus", "Authorized");
-
-                    filterContext.HttpContext.Response.Headers.Add("storeAccessiblity", "Authorized");
-
+                    filterContext.HttpContext.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                    filterContext.Result = new JsonResult("NotAuthorized")
+                    {
+                        Value = new
+                        {
+                            Status = "Error",
+                            Message = "Please Provide auth Token"
+                        },
+                    };
                     return;
                 }
-
-
-                filterContext.HttpContext.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                filterContext.HttpContext.Response.HttpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase = "Please Provide authToken";
-                filterContext.Result = new JsonResult("Please Provide auth Token")
-                {
-                    Value = new
-                    {
-                        Status = "Error",
-                        Message = "Please Provide auth Token"
-                    },
-                };
             }
         }
-    }
-
-    public bool IsValidToken(string authToken)
-    {
-        //validate Token here    
-        return true;
     }
 }

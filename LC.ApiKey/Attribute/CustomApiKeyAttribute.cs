@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using LC.ApiKey.Validation;
 
 namespace LC.ApiKey.Attribute;
 
@@ -21,11 +22,8 @@ public class CustomApiKeyAttribute : System.Attribute, IAsyncActionFilter
             };
             return;
         }
-        IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
-        configurationBuilder.AddJsonFile("AppSettings.json");
-        IConfiguration Configuration = configurationBuilder.Build();
-        string api_key_From_Configuration = Configuration[Constants.ApiKeyName]!;
-        if(api_key_From_Configuration == null)
+
+        if (string.IsNullOrWhiteSpace(apiKeyFromHttpHeader))
         {
             context.Result = new ContentResult()
             {
@@ -35,7 +33,8 @@ public class CustomApiKeyAttribute : System.Attribute, IAsyncActionFilter
             return;
         }
 
-        if (!api_key_From_Configuration.Equals(apiKeyFromHttpHeader))
+        var apiKeyValidator = context.HttpContext.RequestServices.GetRequiredService<IApiKeyValidator>();
+        if (!apiKeyValidator.IsValid(apiKeyFromHttpHeader!))
         {
             context.Result = new ContentResult()
             {
@@ -44,6 +43,7 @@ public class CustomApiKeyAttribute : System.Attribute, IAsyncActionFilter
             };
             return;
         }
+
         await next();
     }
 }
