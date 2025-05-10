@@ -29,3 +29,7 @@ jobs:
         run: dotnet build --no-restore --configuration Release
       - name: Test
         run: dotnet test --no-restore --configuration Release --no-build
+#      - name: Create the Package
+#        run: dotnet pack --configuration Release
+#      - name: Publish
+#        run: dotnet nuget push "bin/Release/*.nupkg" -k ${{ secrets.GITHUB_TOKEN }} -s https://nuget.pkg.github.com/luigi-sw/index.json --skip-duplicate
