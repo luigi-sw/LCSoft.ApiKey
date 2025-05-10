@@ -5,15 +5,27 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dotnet-version: [ '6.0.x', '9.0.x' ]
     timeout-minutes: 15
     steps:
-    - name: Setup .NET 9
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 9.0.x
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Build
-      run: dotnet build --configuration Release
-    - name: Test
-      run: dotnet test --configuration Release --no-build
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup .NET 9.x
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.x
+#          source-url: https://nuget.pkg.github.com/luigi-sw/index.json
+#        env:
+#          NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+#      - name: Setup .NET ${{ matrix.dotnet-version }}
+#        uses: actions/setup-dotnet@v4
+#        with:
+#          dotnet-version: ${{ matrix.dotnet-version }}
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+      - name: Test
+        run: dotnet test --no-restore --configuration Release --no-build
