@@ -1,18 +1,21 @@
+name: ci
 on:
   push:
     branches:
     - main
 jobs:
   build:
+    env:
+      PROJ_PATH: ./LC.ApiKey/LC.ApiKey.csproj
     runs-on: ubuntu-latest
     strategy:
       matrix:
         dotnet-version: [ '6.0.x', '9.0.x' ]
     timeout-minutes: 15
     steps:
-      - name: Checkout
+      - name: 🛠️ Checkout
         uses: actions/checkout@v4
-      - name: Setup .NET 9.x
+      - name: ⚙️ Setup .NET 9.x
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.x
@@ -23,13 +26,13 @@ jobs:
 #        uses: actions/setup-dotnet@v4
 #        with:
 #          dotnet-version: ${{ matrix.dotnet-version }}
-      - name: Restore dependencies
+      - name: 📦 Restore dependencies
         run: dotnet restore
-      - name: Build
+      - name: 🏗️ Build Project
         run: dotnet build --no-restore --configuration Release
-      - name: Test
+      - name: ✅ Run Tests
         run: dotnet test --no-restore --configuration Release --no-build
 #      - name: Create the Package
-#        run: dotnet pack --configuration Release
+#        run: dotnet pack ${{ env.CAMINHO_PROJETO }} --configuration Release -o out
 #      - name: Publish
-#        run: dotnet nuget push "bin/Release/*.nupkg" -k ${{ secrets.GITHUB_TOKEN }} -s https://nuget.pkg.github.com/luigi-sw/index.json --skip-duplicate
+#        run: dotnet nuget push "bin/Release/*.nupkg" -k (--api-key??) ${{ secrets.GITHUB_TOKEN }} -s https://nuget.pkg.github.com/luigi-sw/index.json --skip-duplicate
