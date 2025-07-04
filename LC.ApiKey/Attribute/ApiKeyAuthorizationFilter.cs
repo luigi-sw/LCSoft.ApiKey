@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using LC.ApiKey.Validation;
 using Microsoft.Extensions.Options;
 using LC.ApiKey.Models;
+using System.Net.Http.Headers;
+using Microsoft.Net.Http.Headers;
 
 namespace LC.ApiKey.Attribute;
 
@@ -21,22 +23,40 @@ internal class ApiKeyAuthorizationFilter : IAuthorizationFilter
 
     public void OnAuthorization(AuthorizationFilterContext context)
     {
-        bool success = context.HttpContext.Request.Headers.TryGetValue
+        string? apiKey = null;
+
+        var headers = context.HttpContext.Request.Headers;
+
+        bool success = headers.TryGetValue
             (_headerName, out var apiKeyFromHttpHeader);
 
-        if (!success)
+        if (!success && string.IsNullOrWhiteSpace(apiKeyFromHttpHeader))
+        {
+            if (headers.TryGetValue(HeaderNames.Authorization, out var authorizationHeader))
+            {
+                // Tenta extrair do header Authorization com esquema "ApiKey"
+                if (AuthenticationHeaderValue.TryParse(authorizationHeader, out var authHeaderValue))
+                {
+                    if (authHeaderValue.Scheme.Equals(Constants.ApiKeyName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        apiKey = authHeaderValue.Parameter;
+                    }
+                }
+            } else
+            {
+                context.Result = new UnauthorizedResult();
+                return;
+            }
+        } else
+        {
+            apiKey = apiKeyFromHttpHeader.ToString();
+        } 
+
+        if (string.IsNullOrWhiteSpace(apiKey))
         {
             context.Result = new UnauthorizedResult();
             return;
         }
-
-        if (string.IsNullOrWhiteSpace(apiKeyFromHttpHeader))
-        {
-            context.Result = new UnauthorizedResult();
-            return;
-        }
-
-        string apiKey = apiKeyFromHttpHeader.ToString();
 
         if (!_apiKeyValidator.IsValid(apiKey))
         {

@@ -4,6 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 using LC.ApiKey.Validation;
 using LC.ApiKey.Models;
 using Microsoft.Extensions.Options;
+using Microsoft.Net.Http.Headers;
+using System.Net.Http.Headers;
 
 namespace LC.ApiKey.Attribute;
 
@@ -19,6 +21,8 @@ public class CustomApiKeyAttribute : System.Attribute, IAsyncActionFilter
     public async Task OnActionExecutionAsync
            (ActionExecutingContext context, ActionExecutionDelegate next)
     {
+        string? apiKey = null;
+
         var services = context.HttpContext.RequestServices;
 
         var apiKeyValidator = services.GetRequiredService<IApiKeyValidator>();
@@ -28,22 +32,42 @@ public class CustomApiKeyAttribute : System.Attribute, IAsyncActionFilter
             ? Header
             : (!string.IsNullOrWhiteSpace(options?.HeaderName)
                 ? options.HeaderName
-                : Constants.ApiKeyName);
+                : Constants.ApiKeyHeaderName);
 
-        bool success = context.HttpContext.Request.Headers.TryGetValue
-            (headerName, out var apiKeyFromHttpHeader);
-        
-        if (!success)
+        var headers = context.HttpContext.Request.Headers;
+
+        bool success = headers.TryGetValue
+        (headerName, out var apiKeyFromHttpHeader);
+
+        if (!success && string.IsNullOrWhiteSpace(apiKeyFromHttpHeader))
         {
-            context.Result = new ContentResult()
+            if (headers.TryGetValue(HeaderNames.Authorization, out var authorizationHeader))
             {
-                StatusCode = 401,
-                Content = "The Api Key for accessing this endpoint is not available"
-            };
-            return;
+                // Tenta extrair do header Authorization com esquema "ApiKey"
+                if (AuthenticationHeaderValue.TryParse(authorizationHeader, out var authHeaderValue))
+                {
+                    if (authHeaderValue.Scheme.Equals(Constants.ApiKeyName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        apiKey = authHeaderValue.Parameter;
+                    }
+                }
+            }
+            else
+            {
+                context.Result = new ContentResult()
+                {
+                    StatusCode = 401,
+                    Content = "The Api Key for accessing this endpoint is not available"
+                };
+                return;
+            }
+        }
+        else
+        {
+            apiKey = apiKeyFromHttpHeader.ToString();
         }
 
-        if (string.IsNullOrWhiteSpace(apiKeyFromHttpHeader))
+        if (string.IsNullOrWhiteSpace(apiKey))
         {
             context.Result = new ContentResult()
             {
@@ -53,7 +77,7 @@ public class CustomApiKeyAttribute : System.Attribute, IAsyncActionFilter
             return;
         }
         
-        if (!apiKeyValidator.IsValid(apiKeyFromHttpHeader!))
+        if (!apiKeyValidator.IsValid(apiKey))
         {
             context.Result = new ContentResult()
             {

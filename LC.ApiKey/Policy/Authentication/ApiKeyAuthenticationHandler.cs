@@ -59,15 +59,6 @@ internal class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthent
             return AuthenticateResult.Fail("Invalid apiKey");
         }
 
-        //var claims = new Claim[]
-        //{
-        //    new Claim(ClaimTypes.NameIdentifier, $"{apiKey.ApiKeyId}"),
-        //    new Claim(ClaimTypes.Name, apiKey.Name)
-        //};
-        //var claims = new[] { new Claim(ClaimTypes.Name, "APIKeyUser") };
-
-        //var identiy = new ClaimsIdentity(claims, nameof(ApiKeySchemeHandler));
-
         var claims = new[] { new Claim(ClaimTypes.Name, "Service") };
         var identity = new ClaimsIdentity(claims, Scheme.Name);
         var principal = new ClaimsPrincipal(identity);
@@ -81,13 +72,4 @@ internal class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthent
         await base.HandleChallengeAsync(properties);
 
     }
-
-    //public Task<AuthenticateResult> AuthenticateAsync()
-    //    => Task.FromResult(AuthenticateResult.NoResult());
-
-    //public Task ChallengeAsync(AuthenticationProperties? properties)
-    //    => Task.CompletedTask;
-
-    //public Task ForbidAsync(AuthenticationProperties? properties)
-    //    => Task.CompletedTask;
 }

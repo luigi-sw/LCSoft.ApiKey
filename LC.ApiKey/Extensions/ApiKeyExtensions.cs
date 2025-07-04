@@ -1,5 +1,6 @@
 ﻿using LC.ApiKey.Attribute;
 using LC.ApiKey.EndpointFilter;
+using LC.ApiKey.Middleware;
 using LC.ApiKey.Models;
 using LC.ApiKey.Policy.Auhtorization;
 using LC.ApiKey.Policy.Authentication;
@@ -34,17 +35,8 @@ public static class ApiKeyExtensions
         Action<ApiSettings>? configureOptions = null,
         string sectionName = Constants.ApiKeyName)
     {
-        if (configureOptions != null)
-        {
-            services.Configure(configureOptions);
-        }
-        else if (configuration != null)
-        {
-            services.Configure<ApiSettings>(configuration.GetSection(sectionName));
-        }
-
         services.AddScoped<ApiKeyAuthorizationFilter>();
-        services.RegisterApikeyServices();
+        services.RegisterApikeyServices(configuration, configureOptions, sectionName);
         return services;
     }
 
@@ -52,19 +44,10 @@ public static class ApiKeyExtensions
        this IServiceCollection services,
        IConfiguration? configuration = null,
        Action<ApiSettings>? configureOptions = null,
-       string sectionName = "ApiKey",
+       string sectionName = Constants.ApiKeyName,
        bool applyGlobally = false)
     {
-        services.RegisterApikeyServices();
-
-        if (configureOptions != null)
-        {
-            services.Configure(configureOptions);
-        }
-        else if (configuration != null)
-        {
-            services.Configure<ApiSettings>(configuration.GetSection(sectionName));
-        }
+        services.RegisterApikeyServices(configuration, configureOptions, sectionName);
 
         services.AddScoped<CustomAuthorization>();
 
@@ -185,16 +168,38 @@ builder.Services.AddSwaggerGen(c =>
         this IServiceCollection services,
         IConfiguration? configuration = null,
         Action<ApiSettings>? configureOptions = null,
-        string sectionName = "ApiKey",
+        string sectionName = Constants.ApiKeyName,
         bool useFactory = false)
     {
-        services.RegisterApikeyServices();
-
         if (!useFactory)
         {
             services.AddSingleton<ApiKeyEndpointFilter>();
         }
 
+        services.RegisterApikeyServices(configuration, configureOptions, sectionName);
+
+        return services;
+    }
+
+    public static IServiceCollection RegisterApiKeyMiddleware(
+        this IServiceCollection services,
+        IConfiguration? configuration = null,
+        Action<ApiSettings>? configureOptions = null,
+        string sectionName = Constants.ApiKeyName)
+    {
+        services.RegisterApikeyServices(configuration, configureOptions, sectionName);
+        services.AddTransient<ApiKeyMiddleware>();
+
+        return services;
+    }
+
+    public static IServiceCollection RegisterApikeyServices(
+        this IServiceCollection services,
+        IConfiguration? configuration = null,
+        Action<ApiSettings>? configureOptions = null,
+        string sectionName = Constants.ApiKeyName)
+    {
+        // Registra as opções conforme configuração ou ação
         if (configureOptions != null)
         {
             services.Configure(configureOptions);
@@ -203,12 +208,11 @@ builder.Services.AddSwaggerGen(c =>
         {
             services.Configure<ApiSettings>(configuration.GetSection(sectionName));
         }
+        else
+        {
+            services.Configure<ApiSettings>(opts => { });
+        }
 
-        return services;
-    }
-
-    public static IServiceCollection RegisterApikeyServices(this IServiceCollection services)
-    {
         services.TryAddTransient<IApiKeyValidator, ApiKeyValidator>();
         return services;
     }
