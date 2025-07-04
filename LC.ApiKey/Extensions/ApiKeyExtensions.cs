@@ -1,10 +1,14 @@
 ﻿using LC.ApiKey.Attribute;
+using LC.ApiKey.EndpointFilter;
+using LC.ApiKey.Models;
 using LC.ApiKey.Policy.Auhtorization;
 using LC.ApiKey.Policy.Authentication;
 using LC.ApiKey.Services;
 using LC.ApiKey.Validation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -12,11 +16,66 @@ namespace LC.ApiKey.Extensions;
 
 public static class ApiKeyExtensions
 {
-    public static IServiceCollection RegisterApiKeyFilterAuthorization(this IServiceCollection services)
+
+    public static IServiceCollection RegisterApiKeyFilterAuthorization(
+        this IServiceCollection services,
+        Action<ApiSettings> configureOptions,
+        string sectionName = Constants.ApiKeyName) =>
+            RegisterApiKeyFilterAuthorization(services, null, configureOptions, sectionName);
+
+    public static IServiceCollection RegisterApiKeyFilterAuthorization(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        string sectionName = Constants.ApiKeyName) =>
+            RegisterApiKeyFilterAuthorization(services, configuration, null, sectionName);
+
+    public static IServiceCollection RegisterApiKeyFilterAuthorization(this IServiceCollection services,
+        IConfiguration? configuration = null,
+        Action<ApiSettings>? configureOptions = null,
+        string sectionName = Constants.ApiKeyName)
     {
-        //services.AddAuthentication();
+        if (configureOptions != null)
+        {
+            services.Configure(configureOptions);
+        }
+        else if (configuration != null)
+        {
+            services.Configure<ApiSettings>(configuration.GetSection(sectionName));
+        }
+
         services.AddScoped<ApiKeyAuthorizationFilter>();
         services.RegisterApikeyServices();
+        return services;
+    }
+
+    public static IServiceCollection RegisterApiKeyCustomAuthorization(
+       this IServiceCollection services,
+       IConfiguration? configuration = null,
+       Action<ApiSettings>? configureOptions = null,
+       string sectionName = "ApiKey",
+       bool applyGlobally = false)
+    {
+        services.RegisterApikeyServices();
+
+        if (configureOptions != null)
+        {
+            services.Configure(configureOptions);
+        }
+        else if (configuration != null)
+        {
+            services.Configure<ApiSettings>(configuration.GetSection(sectionName));
+        }
+
+        services.AddScoped<CustomAuthorization>();
+
+        if (applyGlobally)
+        {
+            services.Configure<MvcOptions>(options =>
+            {
+                options.Filters.AddService<CustomAuthorization>();
+            });
+        }
+
         return services;
     }
 
@@ -82,19 +141,9 @@ public static class ApiKeyExtensions
         //            options.HeaderName = "X-API-KEY";
         //        });
     }
-
-    public static IServiceCollection RegisterApikeyServices(this IServiceCollection services)
-    {
-        services.TryAddTransient<IApiKeyValidator, ApiKeyValidator>();
-        return services;
-    }
     
     public static IServiceCollection RegisterMVCApikey(this IServiceCollection services)
     {
-        // Controller with added filter for EVERY controller
-        services.AddControllers(x => x.Filters.Add<ApiKeyAuthorizationFilter>());
-        // Register the AuthKeyFilter for single controllers
-        //services.AddScoped<ApiKeyAuthorizationFilter>(); 
         //usage: [ServiceFilter(typeof(ApiKeyAuthorizationFilter))]
         services.RegisterApikeyServices();
         return services;
@@ -130,5 +179,37 @@ builder.Services.AddSwaggerGen(c =>
     c.AddSecurityRequirement(requirement);
 });
          */
+    }
+
+    public static IServiceCollection RegisterApiKeyEndpointFilter(
+        this IServiceCollection services,
+        IConfiguration? configuration = null,
+        Action<ApiSettings>? configureOptions = null,
+        string sectionName = "ApiKey",
+        bool useFactory = false)
+    {
+        services.RegisterApikeyServices();
+
+        if (!useFactory)
+        {
+            services.AddSingleton<ApiKeyEndpointFilter>();
+        }
+
+        if (configureOptions != null)
+        {
+            services.Configure(configureOptions);
+        }
+        else if (configuration != null)
+        {
+            services.Configure<ApiSettings>(configuration.GetSection(sectionName));
+        }
+
+        return services;
+    }
+
+    public static IServiceCollection RegisterApikeyServices(this IServiceCollection services)
+    {
+        services.TryAddTransient<IApiKeyValidator, ApiKeyValidator>();
+        return services;
     }
 }

@@ -2,17 +2,37 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using LC.ApiKey.Validation;
+using LC.ApiKey.Models;
+using Microsoft.Extensions.Options;
 
 namespace LC.ApiKey.Attribute;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
 public class CustomApiKeyAttribute : System.Attribute, IAsyncActionFilter
 {
+    public string? Header { get; set; }
+
+    public CustomApiKeyAttribute() { }
+
+    public CustomApiKeyAttribute(string header) => Header = header;
+
     public async Task OnActionExecutionAsync
            (ActionExecutingContext context, ActionExecutionDelegate next)
     {
+        var services = context.HttpContext.RequestServices;
+
+        var apiKeyValidator = services.GetRequiredService<IApiKeyValidator>();
+        var options = services.GetService<IOptions<ApiSettings>>()?.Value;
+
+        string headerName = !string.IsNullOrWhiteSpace(Header)
+            ? Header
+            : (!string.IsNullOrWhiteSpace(options?.HeaderName)
+                ? options.HeaderName
+                : Constants.ApiKeyName);
+
         bool success = context.HttpContext.Request.Headers.TryGetValue
-            (Constants.ApiKeyName, out var apiKeyFromHttpHeader);
+            (headerName, out var apiKeyFromHttpHeader);
+        
         if (!success)
         {
             context.Result = new ContentResult()
@@ -32,8 +52,7 @@ public class CustomApiKeyAttribute : System.Attribute, IAsyncActionFilter
             };
             return;
         }
-
-        var apiKeyValidator = context.HttpContext.RequestServices.GetRequiredService<IApiKeyValidator>();
+        
         if (!apiKeyValidator.IsValid(apiKeyFromHttpHeader!))
         {
             context.Result = new ContentResult()

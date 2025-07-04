@@ -15,8 +15,8 @@
 	<PackageType>Dependency</PackageType>
 	<PackageVersion>0.1.0</PackageVersion>
 	<Version>0.1.0</Version>
-	<PackageId>LC.ApiKey</PackageId>
-	<Title>LC ApiKey Authorization for .NET</Title>
+	<PackageId>LCSoft.ApiKey</PackageId>
+	<Title>LCSoft: ApiKey Authorization for .NET</Title>
 	<Company>LC Desenvolvimentos</Company>
 	<Authors>Luigi C. Filho</Authors>
 	<Copyright>LC Desenvolvimentos®. © 2025</Copyright>
@@ -25,34 +25,20 @@
 	<PackageIcon>apikey.png</PackageIcon>
 	<PackageCopyright>LC Desenvolvimentos®. © 2025</PackageCopyright>
 	<PackageReadmeFile>readme.md</PackageReadmeFile>
-	<PackageProjectUrl>https://github.com/luigicfilho/LC.ApiKey</PackageProjectUrl>
+	<PackageProjectUrl>https://github.com/luigi-sw/LCSoft.ApiKey</PackageProjectUrl>
 	<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-	<!--<PackageLicenseExpression>CC-BY-NC-ND-4.0</PackageLicenseExpression>-->
 	<PackageLicenseFile>CC-BY-NC-ND-4.0.txt</PackageLicenseFile>
 	<RepositoryType>git</RepositoryType>
-	<RepositoryUrl>https://github.com/luigicfilho/LC.ApiKey</RepositoryUrl>
+	<RepositoryUrl>https://github.com/luigi-sw/LCSoft.ApiKey</RepositoryUrl>
 	<PackageReleaseNotes>
 		  Version 0.1.0: Initial release with basic features.
 	</PackageReleaseNotes>
-	  <!--<SignAssembly>true</SignAssembly>
-	  <AssemblyOriginatorKeyFile>yourkey.snk</AssemblyOriginatorKeyFile> -->
-	  <!--<PublishAot>true</PublishAot>-->
-	  <!-- Optional: Enable trimming to reduce size -->
-	  <!-- <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
-	  <IsTrimmable>true</IsTrimmable>
-	  <PlatformTarget>x64</PlatformTarget>-->
-	  <!-- Specify architecture -->
-	  <!--<PublishTrimmed>true</PublishTrimmed>
-	  <PublishSingleFile>true</PublishSingleFile>-->
   </PropertyGroup>
 	
   <ItemGroup>
+	<FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.4" />
     <!--<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.4" />-->
-  </ItemGroup>
-
-  <ItemGroup>
-	<FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
   <ItemGroup>

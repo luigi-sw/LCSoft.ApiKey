@@ -1,23 +1,24 @@
-﻿using LC.ApiKey.Validation;
+﻿using LC.ApiKey.Models;
+using LC.ApiKey.Validation;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 
 namespace LC.ApiKey.EndpointFilter;
 
-public class ApiKeyEndpointFilter(IApiKeyValidator apiKeyValidation) : IEndpointFilter
+public class ApiKeyEndpointFilter(IApiKeyValidator apiKeyValidation,
+                                 IOptions<ApiSettings> options) : IEndpointFilter
 {
     private readonly IApiKeyValidator _apiKeyValidation = apiKeyValidation;
+    private readonly IOptions<ApiSettings>? _options = options;
 
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
-        bool success = context.HttpContext.Request.Headers.TryGetValue
-            (Constants.ApiKeyHeaderName, out var apiKeyFromHttpHeader);
+        var httpContext = context.HttpContext;
 
-        if (!success)
-        {
-            return new UnauthorizedHttpObjectResult("ApiKey is missing.");
-        }
+        var headerName = ApiKeyHeaderResolver.Resolve(httpContext, _options);
 
-        if (string.IsNullOrWhiteSpace(apiKeyFromHttpHeader))
+        if (!httpContext.Request.Headers.TryGetValue(headerName, out var apiKeyFromHttpHeader)
+            || string.IsNullOrWhiteSpace(apiKeyFromHttpHeader))
         {
             return new UnauthorizedHttpObjectResult("ApiKey is missing.");
         }
