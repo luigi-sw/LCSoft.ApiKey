@@ -1,44 +1,45 @@
-#on:
-#  push:
-#    tags:
-#    - "v[0-9]+.[0-9]+.[0-9]+"
-#    tags:
-#    - "v[0-9]+.[0-9]+.[0-9]+-preview[0-9][0-9][0-9]"
-#jobs:
-#  build:
-#    runs-on: ubuntu-latest
-#    timeout-minutes: 15
-#    steps:
-#    - name: Checkout
-#      uses: actions/checkout@v2
-#    - name: Verify commit exists in origin/main
-#      run: |
-#        git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
-#        git branch --remote --contains | grep origin/main
-#    - name: Set VERSION variable from tag
-#      run: echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
-#    - name: Build
-#      run: dotnet build --configuration Release /p:Version=${VERSION}
-#    - name: Test
-#      run: dotnet test --configuration Release /p:Version=${VERSION} --no-build
-#    - name: Pack
-#      run: dotnet pack --configuration Release /p:Version=${VERSION} --no-build --output .
-#    - name: Push
-#      run: dotnet nuget push NuGet.Workflow.${VERSION}.nupkg --source https://nuget.pkg.github.com/acraven/index.json --api-key ${GITHUB_TOKEN}
-#      env:
-#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#jobs:
-#  build:
-#    runs-on: ubuntu-latest
-#    timeout-minutes: 15
-#    steps:
-#    - name: Checkout
-#      uses: actions/checkout@v2
-#    - name: Set VERSION variable from tag
-#      run: echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
-#    - name: Pack
-#      run: dotnet pack --configuration Release /p:Version=${VERSION} --output .
-#    - name: Push
-#      run: dotnet nuget push NuGet.Workflow.${VERSION}.nupkg --source https://nuget.pkg.github.com/acraven/index.json --api-key ${GITHUB_TOKEN}
-#      env:
-#       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (e.g. v1.0.0)'
+        required: true
+      description:
+        description: 'Release description (markdown supported)'
+        required: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: nupkg.zip
+          path: ./out
+
+      - name: 📄 Get version from .csproj
+        id: version
+        run: |
+          VERSION=$(grep -oPm1 "(?<=<Version>)[^<]+" LC.ApiKey/LC.ApiKey.csproj)
+          echo "Detected version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: 🏷️ Create Git Tag
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git fetch origin
+          git tag v${{ steps.version.outputs.version }}
+          git push origin v${{ steps.version.outputs.version }}
+
+      - name: 🚀 Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          body: ${{ github.event.inputs.description }}
+          files: ./out/*.nupkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

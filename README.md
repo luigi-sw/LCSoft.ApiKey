@@ -2,7 +2,7 @@
  
 *A simple and secure way to add API key authorization to your .NET APIs.*
 
-[![NuGet](https://img.shields.io/nuget/v/Your.Package.Name.svg?style=flat-square)](https://www.nuget.org/packages/Your.Package.Name)  
+[![NuGet](https://img.shields.io/nuget/v/LCSoft.ApiKey.svg?style=flat-square)](https://www.nuget.org/packages/LCSoft.ApiKey)  
 [![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC_BY--NC--ND_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
 
 ---
