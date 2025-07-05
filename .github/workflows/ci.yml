@@ -102,6 +102,6 @@ jobs:
         with:
           tag_name: v${{ steps.version.outputs.version }}
           body: ${{ github.event.inputs.description }}
-          files: ./out/nupkg-${{ github.job }}-${{ github.run_id }}.*
+          files: ./out/*.nupkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
