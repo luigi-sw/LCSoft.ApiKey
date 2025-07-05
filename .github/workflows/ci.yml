@@ -56,6 +56,7 @@ jobs:
           name: nupkg-${{ github.job }}-${{ github.run_id }}
           path: out/*.nupkg
   release:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: ⬇️ Download Artifacts
