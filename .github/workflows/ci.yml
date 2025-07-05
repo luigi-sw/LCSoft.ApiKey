@@ -36,3 +36,11 @@ jobs:
 #        run: dotnet pack ${{ env.CAMINHO_PROJETO }} --configuration Release -o out
 #      - name: Publish
 #        run: dotnet nuget push "bin/Release/*.nupkg" -k (--api-key??) ${{ secrets.GITHUB_TOKEN }} -s https://nuget.pkg.github.com/luigi-sw/index.json --skip-duplicate
+      - name: 📦 Create NuGet Package
+        run: dotnet pack ${{ env.PROJ_PATH }} --configuration Release -o out
+
+      - name: 📤 Upload Package Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nupkg
+          path: out/*.nupkg
