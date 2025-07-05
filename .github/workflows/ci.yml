@@ -58,16 +58,16 @@ jobs:
           echo "Artifact name will be: $ARTIFACT_NAME"
           echo "name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
       
-      - name: 📦 Create NuGet Package
-        run: dotnet pack ${{ env.PROJ_PATH }} --configuration Release -o out
-
       - name: 🧹 Clean up existing artifact (if re-run)
         run: rm -rf ${{ github.workspace }}/out
+      
+      - name: 📦 Create NuGet Package
+        run: dotnet pack ${{ env.PROJ_PATH }} --configuration Release -o out
 
       - name: 📤 Upload Package Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.set_output.outputs.name }}
+          name: nupkg
           path: out/*.nupkg
   release:
     needs: build
@@ -76,7 +76,8 @@ jobs:
       - name: ⬇️ Download Artifacts
         uses: actions/download-artifact@v4
         with:
-          name: ${{ steps.set_output.outputs.name }}
+#          name: ${{ steps.set_output.outputs.name }}
+          name: nupkg
           path: ./out
 
       - name: Checkout
