@@ -7,11 +7,17 @@ using System.Net.Http.Headers;
 
 namespace LCSoft.ApiKey.EndpointFilter;
 
-public class ApiKeyEndpointFilter(IApiKeyValidator apiKeyValidation,
-                                 IOptions<ApiSettings> options) : IEndpointFilter
+public class ApiKeyEndpointFilter : IEndpointFilter
 {
-    private readonly IApiKeyValidator _apiKeyValidation = apiKeyValidation;
-    private readonly IOptions<ApiSettings>? _options = options;
+    private readonly IApiKeyValidator _apiKeyValidation;
+    private readonly IOptions<ApiSettings>? _options;
+
+    public ApiKeyEndpointFilter(IApiKeyValidator apiKeyValidation,
+                                     IOptions<ApiSettings> options)
+    {
+        _apiKeyValidation = apiKeyValidation;
+        _options = options;
+    }
 
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {

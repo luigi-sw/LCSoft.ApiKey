@@ -1,5 +1,4 @@
-﻿using LCSoft.ApiKey;
-using LCSoft.ApiKey.Validation;
+﻿using LCSoft.ApiKey.Validation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -17,6 +16,18 @@ internal class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthent
 {
     private readonly IApiKeyValidator _apiKeyValidator;
 
+    #if NET6_0 || NET7_0
+    public ApiKeyAuthenticationHandler(
+        IOptionsMonitor<ApiKeyAuthenticationOptions> options,
+        ILoggerFactory logger,
+        UrlEncoder encoder,
+        ISystemClock clock,
+        IApiKeyValidator apiKeyValidator)
+        : base(options, logger, encoder, clock)
+    {
+        _apiKeyValidator = apiKeyValidator;
+    }
+    #else
     public ApiKeyAuthenticationHandler(IOptionsMonitor<ApiKeyAuthenticationOptions> options,
                                        ILoggerFactory logger,
                                        IApiKeyValidator apiKeyValidator,
@@ -25,6 +36,8 @@ internal class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthent
     {
         _apiKeyValidator = apiKeyValidator;
     }
+    #endif
+
 
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
@@ -61,8 +74,13 @@ internal class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthent
             return AuthenticateResult.Fail("API Key not found");
 
         var owner = !string.IsNullOrWhiteSpace(apiKeyInfo.Value.Owner) ? apiKeyInfo.Value.Owner : "Unknown";
+        #if NET8_0_OR_GREATER
         var roles = apiKeyInfo.Value.Roles ?? [];
         var scopes = apiKeyInfo.Value.Scopes ?? [];
+        #else
+        var roles = apiKeyInfo.Value.Roles ?? Array.Empty<string>();
+        var scopes = apiKeyInfo.Value.Scopes ?? Array.Empty<string>();
+        #endif
 
         var claims = new List<Claim>
         {

@@ -1,11 +1,12 @@
 ﻿using LCSoft.ApiKey.Attribute;
+#if NET7_0_OR_GREATER
 using LCSoft.ApiKey.EndpointFilter;
+#endif
 using LCSoft.ApiKey.Middleware;
 using LCSoft.ApiKey.Models;
 using LCSoft.ApiKey.Policy.Auhtorization;
 using LCSoft.ApiKey.Policy.Authentication;
 using LCSoft.ApiKey.Validation;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -16,6 +17,10 @@ namespace LCSoft.ApiKey.Extensions;
 
 public static class ApiKeyExtensions
 {
+    #if NET6_0
+        public const string BearerScheme = "Bearer";
+    #endif
+
     public static IServiceCollection RegisterApiKeyFilterAuthorization(
         this IServiceCollection services,
         Action<ApiSettings> configureOptions,
@@ -66,16 +71,33 @@ public static class ApiKeyExtensions
         Action<ApiSettings>? configureOptions = null,
         string sectionName = Constants.ApiKeyName)
     {
+        #if NET7_0_OR_GREATER
         services.AddAuthentication(options =>
         {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
         }).AddJwtBearer();
 
         services.AddAuthorizationBuilder().AddDefaultPolicy("", policy =>
         {
-            policy.AddAuthenticationSchemes(new[] { JwtBearerDefaults.AuthenticationScheme });
+            policy.AddAuthenticationSchemes(new[] { Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme });
             policy.Requirements.Add(new ApiKeyRequirement());
         });
+
+        #else
+        services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = BearerScheme;
+                    options.DefaultChallengeScheme = BearerScheme;
+                })
+                .AddJwtBearer();
+
+                services.AddAuthorization(options =>
+                {
+                    options.DefaultPolicy = new AuthorizationPolicyBuilder(BearerScheme)
+                        .AddRequirements(new ApiKeyRequirement())
+                        .Build();
+                });
+        #endif
 
         services.AddScoped<IAuthorizationHandler, ApiKeyAuthorizationHandler>();
         services.RegisterApikeyServices(configuration, configureOptions, sectionName);
@@ -104,6 +126,7 @@ public static class ApiKeyExtensions
         return services;
     }
 
+#if NET7_0_OR_GREATER
     public static IServiceCollection RegisterApiKeyEndpointFilter(
         this IServiceCollection services,
         IConfiguration? configuration = null,
@@ -120,6 +143,7 @@ public static class ApiKeyExtensions
 
         return services;
     }
+#endif
 
     public static IServiceCollection RegisterApiKeyMiddleware(
         this IServiceCollection services,

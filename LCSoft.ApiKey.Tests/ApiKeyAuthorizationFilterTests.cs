@@ -26,7 +26,7 @@ public class ApiKeyAuthorizationFilterTests
         var options = Substitute.For<IOptions<ApiSettings>>();
         options.Value.Returns(new ApiSettings
         {
-            HeaderName = headerName
+            HeaderName = headerName ?? CustomHeaderName
         });
 
         return new ApiKeyAuthorizationFilter(apiKeyValidator, options);
