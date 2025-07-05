@@ -17,6 +17,8 @@ jobs:
     env:
       PROJ_PATH: ./LCSoft.ApiKey/LCSoft.ApiKey.csproj
     runs-on: ubuntu-latest
+    outputs:
+      artifact_name: ${{ steps.set_output.outputs.name }}
     strategy:
       matrix:
         dotnet-version: [ '6.0.x', '9.0.x' ]
@@ -45,6 +47,13 @@ jobs:
 #        run: dotnet pack ${{ env.CAMINHO_PROJETO }} --configuration Release -o out
 #      - name: Publish
 #        run: dotnet nuget push "bin/Release/*.nupkg" -k (--api-key??) ${{ secrets.GITHUB_TOKEN }} -s https://nuget.pkg.github.com/luigi-sw/index.json --skip-duplicate
+      - name: Set artifact name
+        id: set_output
+        run: |
+          ARTIFACT_NAME=nupkg-release-${{ github.run_id }}
+          echo "Artifact name will be: $ARTIFACT_NAME"
+          echo "name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
+      
       - name: 📦 Create NuGet Package
         run: dotnet pack ${{ env.PROJ_PATH }} --configuration Release -o out
 
@@ -54,7 +63,7 @@ jobs:
       - name: 📤 Upload Package Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: nupkg-${{ github.job }}-${{ github.run_id }}
+          name: ${{ steps.set_output.outputs.name }}
           path: out/*.nupkg
   release:
     needs: build
@@ -63,7 +72,7 @@ jobs:
       - name: ⬇️ Download Artifacts
         uses: actions/download-artifact@v4
         with:
-          name: nupkg-${{ github.job }}-${{ github.run_id }}
+          name: ${{ steps.set_output.outputs.name }}
           path: ./out
 
       - name: 📄 Get version from .csproj
