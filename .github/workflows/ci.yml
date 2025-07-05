@@ -65,6 +65,8 @@ jobs:
       - name: 📦 Create NuGet Package
         run: dotnet pack ${{ env.PROJ_PATH }} --configuration Release -o out
 
+      - name: List package files before release
+        run: ls -la ./out
       - name: 📤 Upload Package Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -74,6 +76,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: List package files before release
+        run: ls -la ./out
+        
       - name: ⬇️ Download Artifacts
         uses: actions/download-artifact@v4
         with:
