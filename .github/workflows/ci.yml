@@ -13,6 +13,7 @@ on:
         required: true
 jobs:
   build:
+    if: github.event_name == 'push'
     env:
       PROJ_PATH: ./LCSoft.ApiKey/LCSoft.ApiKey.csproj
     runs-on: ubuntu-latest
