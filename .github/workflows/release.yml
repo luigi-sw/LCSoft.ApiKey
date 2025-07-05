@@ -20,18 +20,25 @@ jobs:
           name: nupkg
           path: ./out
 
+      - name: 📄 Get version from .csproj
+        id: version
+        run: |
+          VERSION=$(grep -oPm1 "(?<=<Version>)[^<]+" LC.ApiKey/LC.ApiKey.csproj)
+          echo "Detected version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: 🏷️ Create Git Tag
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git fetch origin
-          git tag ${{ github.event.inputs.version }}
-          git push origin ${{ github.event.inputs.version }}
+          git tag v${{ steps.version.outputs.version }}
+          git push origin v${{ steps.version.outputs.version }}
 
       - name: 🚀 Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.inputs.version }}
+          tag_name: v${{ steps.version.outputs.version }}
           body: ${{ github.event.inputs.description }}
           files: ./out/*.nupkg
         env:
