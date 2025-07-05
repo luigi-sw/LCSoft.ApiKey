@@ -75,6 +75,9 @@ jobs:
           name: ${{ steps.set_output.outputs.name }}
           path: ./out
 
+      - name: Checkout
+        uses: actions/checkout@v4
+        
       - name: 📄 Get version from .csproj
         id: version
         run: |
