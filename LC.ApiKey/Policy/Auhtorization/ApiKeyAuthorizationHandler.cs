@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
+using Microsoft.Net.Http.Headers;
+using System.Net.Http.Headers;
 
 namespace LC.ApiKey.Policy.Auhtorization;
 
@@ -16,52 +18,41 @@ internal class ApiKeyAuthorizationHandler : AuthorizationHandler<ApiKeyRequireme
 
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, ApiKeyRequirement requirement)
     {
-        var result = SucceedRequirementIfApiKeyPresentAndValid(context, requirement);
-
-        if (result)
-        {
-            return Task.CompletedTask;
-        } else
-        {
-            context.Fail();
-            return Task.CompletedTask;
-        }   
+        SucceedRequirementIfApiKeyPresentAndValid(context, requirement);
+        return Task.CompletedTask;
     }
 
     internal bool SucceedRequirementIfApiKeyPresentAndValid(AuthorizationHandlerContext context, ApiKeyRequirement requirement)
     {
-        if (context.Resource is HttpContext httpContext)
+        if (context.Resource is not HttpContext httpContext)
+            return false;
+
+        string? apiKey = null;
+
+        if (httpContext.Request.Headers.TryGetValue(Constants.ApiKeyHeaderName, out StringValues value) &&
+        !StringValues.IsNullOrEmpty(value))
         {
-            if (!httpContext.Request.Headers.TryGetValue(Constants.ApiKeyHeaderName, out StringValues value))
+            apiKey = value.FirstOrDefault();
+        }
+        else if (httpContext.Request.Headers.TryGetValue(HeaderNames.Authorization, out var authorizationHeader))
+        {
+            // Tenta extrair do Authorization: ApiKey xyz
+            if (AuthenticationHeaderValue.TryParse(authorizationHeader, out var authHeader))
             {
-                context.Fail();
-                return false;
-            }
-
-            var apiKey = value.FirstOrDefault();
-
-            if (string.IsNullOrWhiteSpace(apiKey))
-            {
-                context.Fail();
-                return false;
-            }
-
-
-            if (_apiKeyValidation.IsValid(apiKey))
-            {
-                context.Succeed(requirement);
-                return true;
-            }
-
-            if (requirement.ApiKeys is not null)
-            {
-                if (apiKey != null && requirement.ApiKeys.Any(requiredApiKey => apiKey == requiredApiKey))
+                if (authHeader.Scheme.Equals(Constants.ApiKeyName, StringComparison.OrdinalIgnoreCase))
                 {
-                    context.Succeed(requirement);
-                    return true;
+                    apiKey = authHeader.Parameter;
                 }
             }
         }
-        return false;
+
+        if (string.IsNullOrWhiteSpace(apiKey))
+            return false;
+
+        if (!_apiKeyValidation.IsValid(apiKey))
+            return false;
+
+        context.Succeed(requirement);
+        return true;
     }
 }

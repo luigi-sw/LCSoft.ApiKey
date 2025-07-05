@@ -1,18 +1,19 @@
 ﻿using LC.ApiKey.Validation;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using Microsoft.Net.Http.Headers;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
+using System.Text.Json;
 
 namespace LC.ApiKey.Policy.Authentication;
 
 internal class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthenticationOptions>
 {
-    private readonly string AuthorizationHeaderName = HeaderNames.Authorization;
-    private const string ApiKeySchemeName = Constants.Scheme;
     private readonly IApiKeyValidator _apiKeyValidator;
 
     public ApiKeyAuthenticationHandler(IOptionsMonitor<ApiKeyAuthenticationOptions> options,
@@ -26,50 +27,81 @@ internal class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthent
 
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        if (!Request.Headers.TryGetValue(AuthorizationHeaderName, out var apiKeyValues))
+        string? apiKey = null;
+
+        if (!string.IsNullOrWhiteSpace(Options.HeaderName) &&
+            Request.Headers.TryGetValue(Options.HeaderName, out var customHeader) &&
+            !StringValues.IsNullOrEmpty(customHeader))
         {
+            apiKey = customHeader.ToString();
+        }
+        else if (Request.Headers.TryGetValue(HeaderNames.Authorization, out var authHeader) &&
+                 AuthenticationHeaderValue.TryParse(authHeader, out AuthenticationHeaderValue? headerValue) &&
+                 headerValue.Scheme.Equals(Constants.Scheme, StringComparison.OrdinalIgnoreCase))
+        {
+            if (headerValue.Parameter is null)
+            {
+                return AuthenticateResult.Fail("Missing apiKey");
+            }
+            else
+            {
+                apiKey = headerValue.Parameter;
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(apiKey))
             return AuthenticateResult.Fail("Missing API Key");
-        }
 
-        if (!AuthenticationHeaderValue.TryParse(Request.Headers[AuthorizationHeaderName], out AuthenticationHeaderValue? headerValue))
+        var apiKeyInfo = _apiKeyValidator.ValidateAndGetInfo(apiKey);
+        if (apiKeyInfo.IsError)
+            return AuthenticateResult.Fail("Invalid API Key");
+
+        if (apiKeyInfo.Value is null)
+            return AuthenticateResult.Fail("API Key not found");
+
+        var owner = !string.IsNullOrWhiteSpace(apiKeyInfo.Value.Owner) ? apiKeyInfo.Value.Owner : "Unknown";
+        var roles = apiKeyInfo.Value.Roles ?? [];
+        var scopes = apiKeyInfo.Value.Scopes ?? [];
+
+        var claims = new List<Claim>
         {
-            return AuthenticateResult.NoResult();
-        }
+            new(ClaimTypes.Name, owner),
+            new(Constants.ApiKeyName, apiKey)
+        };
 
-        if (!ApiKeySchemeName.Equals(headerValue.Scheme, StringComparison.OrdinalIgnoreCase))
+        if (roles?.Length > 0)
         {
-            return AuthenticateResult.NoResult();
+            claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
         }
-        if (headerValue.Parameter is null)
+
+        if (scopes?.Length > 0)
         {
-            //Missing key
-            return AuthenticateResult.Fail("Missing apiKey");
+            claims.AddRange(scopes.Select(scope => new Claim("scope", scope)));
         }
 
-        bool isValid = _apiKeyValidator.IsValid(headerValue.Parameter);
-        //var providedApiKey = apiKeyValues.FirstOrDefault();
-
-        //if (string.IsNullOrEmpty(providedApiKey) || providedApiKey != expectedApiKey)
-        //{
-        //    return AuthenticateResult.Fail("Invalid API Key");
-        //}
-
-        if (!isValid)
-        {
-            return AuthenticateResult.Fail("Invalid apiKey");
-        }
-
-        var claims = new[] { new Claim(ClaimTypes.Name, "Service") };
         var identity = new ClaimsIdentity(claims, Scheme.Name);
         var principal = new ClaimsPrincipal(identity);
         var ticket = new AuthenticationTicket(principal, Scheme.Name);
+        
         return AuthenticateResult.Success(ticket);
     }
 
     protected override async Task HandleChallengeAsync(AuthenticationProperties properties)
     {
-        Response.Headers["WWW-Authenticate"] = $"ApiKey \", charset=\"UTF-8\"";
-        await base.HandleChallengeAsync(properties);
+        var realm = string.IsNullOrWhiteSpace(Options.Realm)
+        ? Constants.DefaultRealm
+        : Options.Realm;
 
+        Response.Headers.WWWAuthenticate = $"ApiKey realm=\"{realm}\", charset=\"UTF-8\"";
+        Response.StatusCode = StatusCodes.Status401Unauthorized;
+        Response.ContentType = "application/json";
+
+        var response = new
+        {
+            error = "Unauthorized",
+            message = Options.ErrorMessage
+        };
+
+        await Response.WriteAsync(JsonSerializer.Serialize(response));
     }
 }

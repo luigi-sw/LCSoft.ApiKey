@@ -37,13 +37,14 @@
 	
   <ItemGroup>
 	<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	<PackageReference Include="LCSoft.Results" Version="0.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.4" />
     <!--<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.4" />-->
   </ItemGroup>
 
   <ItemGroup>
 	<None Include="apikey.png" Pack="true" Visible="false" PackagePath="" />
-	<None Include="readme.md" Pack="true" PackagePath=""/>
+	<None Include="readme.md" Pack="true" PackagePath="" />
 	<None Include="CC-BY-NC-ND-4.0.txt" Pack="true" Visible="false" PackagePath="" />
   </ItemGroup>
 </Project>

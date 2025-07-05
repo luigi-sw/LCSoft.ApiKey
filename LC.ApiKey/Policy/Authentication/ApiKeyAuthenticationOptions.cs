@@ -24,4 +24,18 @@ public class ApiKeyAuthenticationOptions : AuthenticationSchemeOptions
     /// </summary>
     /// <value></value>
     public string HeaderName { get; set; } = HeaderNames.Authorization;
+
+    /// <summary>
+    /// Default Realm for WWW_Authenticate header.
+    /// Default: Application
+    /// </summary>
+    /// <value></value>
+    public string? Realm { get; set; }
+
+    /// <summary>
+    /// Default Error message for WWW_Authenticate header.
+    /// </summary>
+    /// <value></value>
+    public string ErrorMessage { get; set; } =
+        "An API key is required to access this resource. Include it in the Authorization header as: ApiKey <your-key>";
 }
