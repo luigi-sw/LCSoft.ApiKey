@@ -1,7 +1,7 @@
-﻿using LC.ApiKey.Attribute;
+﻿using LCSoft.ApiKey.Attribute;
 using Microsoft.AspNetCore.Mvc;
 
-namespace LC.ApiKey.Debugger.Controllers;
+namespace LCSoft.ApiKey.Debugger.Controllers;
 
 [ApiController]
 public class TestController : ControllerBase

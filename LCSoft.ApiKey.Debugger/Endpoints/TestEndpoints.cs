@@ -1,4 +1,4 @@
-﻿namespace LC.ApiKey.Debugger.Endpoints;
+﻿namespace LCSoft.ApiKey.Debugger.Endpoints;
 
 public class TestEndpoints
 {

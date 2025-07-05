@@ -1,5 +1,5 @@
-﻿using LC.ApiKey.EndpointFilter;
-using LC.ApiKey.Models;
+﻿using LCSoft.ApiKey.EndpointFilter;
+using LCSoft.ApiKey.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 

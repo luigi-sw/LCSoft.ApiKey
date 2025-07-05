@@ -1,4 +1,4 @@
-﻿namespace LC.ApiKey.Models;
+﻿namespace LCSoft.ApiKey.Models;
 
 public class ApiKeyHeaderMetadata(string headerName)
 {

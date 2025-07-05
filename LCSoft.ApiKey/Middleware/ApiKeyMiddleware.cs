@@ -1,5 +1,5 @@
-﻿using LC.ApiKey.Models;
-using LC.ApiKey.Validation;
+﻿using LCSoft.ApiKey.Models;
+using LCSoft.ApiKey.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -8,7 +8,7 @@ using Microsoft.Net.Http.Headers;
 using System.Net;
 using System.Net.Http.Headers;
 
-namespace LC.ApiKey.Middleware;
+namespace LCSoft.ApiKey.Middleware;
 
 public class ApiKeyMiddleware
 {

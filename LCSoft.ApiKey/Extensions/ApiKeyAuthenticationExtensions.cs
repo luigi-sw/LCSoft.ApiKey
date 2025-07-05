@@ -1,30 +1,30 @@
-﻿using LC.ApiKey.Policy.Authentication;
-using LC.ApiKey.Validation;
+﻿using LCSoft.ApiKey.Policy.Authentication;
+using LCSoft.ApiKey.Validation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
-namespace LC.ApiKey.Extensions;
+namespace LCSoft.ApiKey.Extensions;
 
 internal static class ApiKeyAuthenticationExtensions
 {
     public static AuthenticationBuilder AddApiKey<TAuthService>(this AuthenticationBuilder builder)
         where TAuthService : class, IApiKeyValidator
     {
-        return AddApiKey<TAuthService>(builder, ApiKeyAuthenticationOptions.Scheme, _ => { });
+        return builder.AddApiKey<TAuthService>(ApiKeyAuthenticationOptions.Scheme, _ => { });
     }
 
     public static AuthenticationBuilder AddApiKey<TAuthService>(this AuthenticationBuilder builder, string authenticationScheme)
         where TAuthService : class, IApiKeyValidator
     {
-        return AddApiKey<TAuthService>(builder, authenticationScheme, _ => { });
+        return builder.AddApiKey<TAuthService>(authenticationScheme, _ => { });
     }
 
     public static AuthenticationBuilder AddApiKey<TAuthService>(this AuthenticationBuilder builder, Action<ApiKeyAuthenticationOptions> configureOptions)
         where TAuthService : class, IApiKeyValidator
     {
-        return AddApiKey<TAuthService>(builder, ApiKeyAuthenticationOptions.Scheme, configureOptions);
+        return builder.AddApiKey<TAuthService>(ApiKeyAuthenticationOptions.Scheme, configureOptions);
     }
 
     public static AuthenticationBuilder AddApiKey<TAuthService>(this AuthenticationBuilder builder, string authenticationScheme, Action<ApiKeyAuthenticationOptions> configureOptions)

@@ -1,7 +1,5 @@
-using LC.ApiKey.Extensions;
-using LC.ApiKey.Middleware;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc.Authorization;
+using LCSoft.ApiKey.Extensions;
+using LCSoft.ApiKey.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 

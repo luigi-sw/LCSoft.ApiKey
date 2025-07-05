@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.Net.Http.Headers;
 
-namespace LC.ApiKey.Policy.Authentication;
+namespace LCSoft.ApiKey.Policy.Authentication;
 
 public class ApiKeyAuthenticationOptions : AuthenticationSchemeOptions
 {

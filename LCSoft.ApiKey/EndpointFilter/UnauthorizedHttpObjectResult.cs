@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 
-namespace LC.ApiKey.EndpointFilter;
+namespace LCSoft.ApiKey.EndpointFilter;
 
 public sealed class UnauthorizedHttpObjectResult : IResult, IStatusCodeHttpResult
 {

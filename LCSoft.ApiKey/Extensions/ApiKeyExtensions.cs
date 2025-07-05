@@ -1,10 +1,10 @@
-﻿using LC.ApiKey.Attribute;
-using LC.ApiKey.EndpointFilter;
-using LC.ApiKey.Middleware;
-using LC.ApiKey.Models;
-using LC.ApiKey.Policy.Auhtorization;
-using LC.ApiKey.Policy.Authentication;
-using LC.ApiKey.Validation;
+﻿using LCSoft.ApiKey.Attribute;
+using LCSoft.ApiKey.EndpointFilter;
+using LCSoft.ApiKey.Middleware;
+using LCSoft.ApiKey.Models;
+using LCSoft.ApiKey.Policy.Auhtorization;
+using LCSoft.ApiKey.Policy.Authentication;
+using LCSoft.ApiKey.Validation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +12,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace LC.ApiKey.Extensions;
+namespace LCSoft.ApiKey.Extensions;
 
 public static class ApiKeyExtensions
 {
@@ -20,13 +20,13 @@ public static class ApiKeyExtensions
         this IServiceCollection services,
         Action<ApiSettings> configureOptions,
         string sectionName = Constants.ApiKeyName) =>
-            RegisterApiKeyFilterAuthorization(services, null, configureOptions, sectionName);
+            services.RegisterApiKeyFilterAuthorization(null, configureOptions, sectionName);
 
     public static IServiceCollection RegisterApiKeyFilterAuthorization(
         this IServiceCollection services,
         IConfiguration configuration,
         string sectionName = Constants.ApiKeyName) =>
-            RegisterApiKeyFilterAuthorization(services, configuration, null, sectionName);
+            services.RegisterApiKeyFilterAuthorization(configuration, null, sectionName);
 
     public static IServiceCollection RegisterApiKeyFilterAuthorization(this IServiceCollection services,
         IConfiguration? configuration = null,

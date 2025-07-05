@@ -1,13 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
-using LC.ApiKey.Validation;
-using LC.ApiKey.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using System.Net.Http.Headers;
+using LCSoft.ApiKey.Validation;
+using LCSoft.ApiKey.Models;
 
-namespace LC.ApiKey.Attribute;
+namespace LCSoft.ApiKey.Attribute;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
 public class CustomApiKeyAttribute : System.Attribute, IAsyncActionFilter
@@ -30,9 +30,9 @@ public class CustomApiKeyAttribute : System.Attribute, IAsyncActionFilter
 
         string headerName = !string.IsNullOrWhiteSpace(Header)
             ? Header
-            : (!string.IsNullOrWhiteSpace(options?.HeaderName)
+            : !string.IsNullOrWhiteSpace(options?.HeaderName)
                 ? options.HeaderName
-                : Constants.ApiKeyHeaderName);
+                : Constants.ApiKeyHeaderName;
 
         var headers = context.HttpContext.Request.Headers;
 

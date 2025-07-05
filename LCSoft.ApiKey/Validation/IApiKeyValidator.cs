@@ -1,7 +1,7 @@
-﻿using LC.ApiKey.Models;
+﻿using LCSoft.ApiKey.Models;
 using LCSoft.Results;
 
-namespace LC.ApiKey.Validation;
+namespace LCSoft.ApiKey.Validation;
 
 public interface IApiKeyValidator
 {

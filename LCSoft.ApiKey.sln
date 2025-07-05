@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LCSoft.ApiKey.Debugger", "L
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LCSoft.ApiKey", "LCSoft.ApiKey\LCSoft.ApiKey.csproj", "{539A5405-AA13-449D-8AB0-334365998440}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LCSoft.ApiKey.Tests", "LCSoft.ApiKey.Tests\LCSoft.ApiKey.Tests.csproj", "{632177C5-C86F-4025-8874-6B185C53C02A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +22,10 @@ Global
 		{539A5405-AA13-449D-8AB0-334365998440}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{539A5405-AA13-449D-8AB0-334365998440}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{539A5405-AA13-449D-8AB0-334365998440}.Release|Any CPU.Build.0 = Release|Any CPU
+		{632177C5-C86F-4025-8874-6B185C53C02A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{632177C5-C86F-4025-8874-6B185C53C02A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{632177C5-C86F-4025-8874-6B185C53C02A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{632177C5-C86F-4025-8874-6B185C53C02A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

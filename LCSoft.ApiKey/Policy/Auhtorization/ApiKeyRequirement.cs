@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 
-namespace LC.ApiKey.Policy.Auhtorization;
+namespace LCSoft.ApiKey.Policy.Auhtorization;
 
 internal class ApiKeyRequirement : IAuthorizationRequirement {}

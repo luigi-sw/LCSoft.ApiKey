@@ -1,9 +1,8 @@
-﻿
-using LC.ApiKey.Models;
+﻿using LCSoft.ApiKey.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
-namespace LC.ApiKey.EndpointFilter;
+namespace LCSoft.ApiKey.EndpointFilter;
 
 public static class ApiKeyHeaderResolver
 {

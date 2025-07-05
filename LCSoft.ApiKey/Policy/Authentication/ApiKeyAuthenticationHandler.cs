@@ -1,4 +1,5 @@
-﻿using LC.ApiKey.Validation;
+﻿using LCSoft.ApiKey;
+using LCSoft.ApiKey.Validation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -10,7 +11,7 @@ using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 
-namespace LC.ApiKey.Policy.Authentication;
+namespace LCSoft.ApiKey.Policy.Authentication;
 
 internal class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthenticationOptions>
 {

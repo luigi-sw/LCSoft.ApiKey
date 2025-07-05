@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc;
-using LC.ApiKey.Validation;
 using Microsoft.Extensions.Options;
-using LC.ApiKey.Models;
 using System.Net.Http.Headers;
 using Microsoft.Net.Http.Headers;
+using LCSoft.ApiKey.Validation;
+using LCSoft.ApiKey.Models;
 
-namespace LC.ApiKey.Attribute;
+namespace LCSoft.ApiKey.Attribute;
 
 internal class ApiKeyAuthorizationFilter : IAuthorizationFilter
 {

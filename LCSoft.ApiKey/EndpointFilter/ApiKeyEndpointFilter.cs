@@ -1,11 +1,11 @@
-﻿using LC.ApiKey.Models;
-using LC.ApiKey.Validation;
+﻿using LCSoft.ApiKey.Models;
+using LCSoft.ApiKey.Validation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using System.Net.Http.Headers;
 
-namespace LC.ApiKey.EndpointFilter;
+namespace LCSoft.ApiKey.EndpointFilter;
 
 public class ApiKeyEndpointFilter(IApiKeyValidator apiKeyValidation,
                                  IOptions<ApiSettings> options) : IEndpointFilter

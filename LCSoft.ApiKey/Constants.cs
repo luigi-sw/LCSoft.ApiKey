@@ -1,4 +1,4 @@
-﻿namespace LC.ApiKey;
+﻿namespace LCSoft.ApiKey;
 
 internal static class Constants
 {

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace LC.ApiKey.Attribute;
+namespace LCSoft.ApiKey.Attribute;
 
 public class ApiKeyAttribute : ServiceFilterAttribute
 {

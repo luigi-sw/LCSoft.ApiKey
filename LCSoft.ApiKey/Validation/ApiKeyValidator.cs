@@ -1,8 +1,8 @@
-﻿using LC.ApiKey.Models;
+﻿using LCSoft.ApiKey.Models;
 using LCSoft.Results;
 using Microsoft.Extensions.Configuration;
 
-namespace LC.ApiKey.Validation;
+namespace LCSoft.ApiKey.Validation;
 
 internal class ApiKeyValidator : IApiKeyValidator
 {

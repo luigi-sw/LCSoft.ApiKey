@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 
-namespace LC.ApiKey.Policy.Authentication;
+namespace LCSoft.ApiKey.Policy.Authentication;
 
 internal class ApiKeyAuthenticationPostConfigureOptions : IPostConfigureOptions<ApiKeyAuthenticationOptions>
 {

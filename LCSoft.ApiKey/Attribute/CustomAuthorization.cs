@@ -2,13 +2,13 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using Microsoft.Net.Http.Headers;
-using LC.ApiKey.Validation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using LC.ApiKey.Models;
 using System.Net.Http.Headers;
+using LCSoft.ApiKey.Validation;
+using LCSoft.ApiKey.Models;
 
-namespace LC.ApiKey.Attribute;
+namespace LCSoft.ApiKey.Attribute;
 
 //Usage: [CustomAuthorization(AuthorizationHeader = "X-Auth", ApiKeyHeader = "X-API-Key")] 
 [AttributeUsage(AttributeTargets.Class)]
@@ -35,9 +35,9 @@ public class CustomAuthorization : System.Attribute, IAuthorizationFilter
 
         string apiKeyHeader = !string.IsNullOrWhiteSpace(ApiKeyHeader)
             ? ApiKeyHeader
-            : (!string.IsNullOrWhiteSpace(options?.HeaderName)
+            : !string.IsNullOrWhiteSpace(options?.HeaderName)
                 ? options.HeaderName
-                : Constants.ApiKeyHeaderName);
+                : Constants.ApiKeyHeaderName;
 
         if (headers.TryGetValue(authorizationHeader, out var authTokens))
         {

@@ -1,11 +1,11 @@
-﻿using LC.ApiKey.Validation;
+﻿using LCSoft.ApiKey.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 using Microsoft.Net.Http.Headers;
 using System.Net.Http.Headers;
 
-namespace LC.ApiKey.Policy.Auhtorization;
+namespace LCSoft.ApiKey.Policy.Auhtorization;
 
 internal class ApiKeyAuthorizationHandler : AuthorizationHandler<ApiKeyRequirement>
 {
