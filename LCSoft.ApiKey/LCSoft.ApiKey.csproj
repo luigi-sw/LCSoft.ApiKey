@@ -1,0 +1,56 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+	<IncludeContentInPack>true</IncludeContentInPack>
+
+	<NoWarn>$(NoWarn);NU5128</NoWarn>
+	<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <PropertyGroup>
+	<PackageType>Dependency</PackageType>
+	<PackageVersion>0.1.0</PackageVersion>
+	<Version>0.1.0</Version>
+	<PackageId>LCSoft.ApiKey</PackageId>
+	<Title>LCSoft: ApiKey Authorization for .NET</Title>
+	<Company>LC Desenvolvimentos</Company>
+	<Authors>Luigi C. Filho</Authors>
+	<Copyright>LC Desenvolvimentos®. © 2025</Copyright>
+	<Description>Implementation to use ApiKey Authorization .NET API applications.</Description>
+	<PackageTags>authorization;apikey;api</PackageTags>
+	<PackageIcon>apikey.png</PackageIcon>
+	<PackageCopyright>LC Desenvolvimentos®. © 2025</PackageCopyright>
+	<PackageReadmeFile>readme.md</PackageReadmeFile>
+	<PackageProjectUrl>https://github.com/luigi-sw/LCSoft.ApiKey</PackageProjectUrl>
+	<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+	<PackageLicenseFile>CC-BY-NC-ND-4.0.txt</PackageLicenseFile>
+	<RepositoryType>git</RepositoryType>
+	<RepositoryUrl>https://github.com/luigi-sw/LCSoft.ApiKey</RepositoryUrl>
+	<PackageReleaseNotes>
+		  Version 0.1.0: Initial release with basic features.
+	</PackageReleaseNotes>
+  </PropertyGroup>
+	
+  <ItemGroup>
+	<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	<PackageReference Include="LCSoft.Results" Version="0.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.4" />
+    <!--<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.4" />-->
+  </ItemGroup>
+
+  <ItemGroup>
+	<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+		<_Parameter1>LCSoft.ApiKey.Tests</_Parameter1>
+	</AssemblyAttribute>
+  </ItemGroup>
+	
+  <ItemGroup>
+	<None Include="apikey.png" Pack="true" Visible="false" PackagePath="" />
+	<None Include="readme.md" Pack="true" PackagePath="" />
+	<None Include="CC-BY-NC-ND-4.0.txt" Pack="true" Visible="false" PackagePath="" />
+  </ItemGroup>
+</Project>
