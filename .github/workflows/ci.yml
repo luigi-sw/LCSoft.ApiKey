@@ -76,8 +76,6 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: List package files before release
-        run: ls -la ./out
         
       - name: ⬇️ Download Artifacts
         uses: actions/download-artifact@v4
@@ -85,6 +83,9 @@ jobs:
 #          name: ${{ steps.set_output.outputs.name }}
           name: nupkg
           path: ./out
+
+      - name: List package files before release
+        run: ls -la ./out
 
       - name: Checkout
         uses: actions/checkout@v4
