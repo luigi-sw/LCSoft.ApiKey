@@ -11,6 +11,10 @@ on:
       description:
         description: 'Release description (markdown supported)'
         required: true
+
+permissions:
+  contents: write
+
 jobs:
   build:
     if: github.event_name == 'push'
