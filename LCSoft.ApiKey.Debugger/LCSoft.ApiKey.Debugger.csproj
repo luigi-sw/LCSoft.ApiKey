@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LC.ApiKey\LC.ApiKey.csproj" />
+    <ProjectReference Include="..\LC.ApiKey\LCSoft.ApiKey.csproj" />
   </ItemGroup>
 
 </Project>

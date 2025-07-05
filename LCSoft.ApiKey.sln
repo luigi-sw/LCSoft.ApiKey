@@ -2,9 +2,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35913.81
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LC.ApiKey.Debugger", "LC.ApiKey.Debugger\LC.ApiKey.Debugger.csproj", "{C4886364-469A-4905-8A17-CAE9A5E0E9F1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LCSoft.ApiKey.Debugger", "LCSoft.ApiKey.Debugger\LCSoft.ApiKey.Debugger.csproj", "{C4886364-469A-4905-8A17-CAE9A5E0E9F1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LC.ApiKey", "LC.ApiKey\LC.ApiKey.csproj", "{539A5405-AA13-449D-8AB0-334365998440}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LCSoft.ApiKey", "LCSoft.ApiKey\LCSoft.ApiKey.csproj", "{539A5405-AA13-449D-8AB0-334365998440}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
