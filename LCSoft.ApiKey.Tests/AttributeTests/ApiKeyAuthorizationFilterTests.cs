@@ -9,7 +9,7 @@ using Microsoft.Net.Http.Headers;
 using System.Net.Http.Headers;
 using NSubstitute;
 
-namespace LCSoft.ApiKey.Tests;
+namespace LCSoft.ApiKey.Tests.AttributeTests;
 
 public class ApiKeyAuthorizationFilterTests
 {

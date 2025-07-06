@@ -1,7 +1,7 @@
 ﻿using LCSoft.ApiKey.Attribute;
 using Microsoft.AspNetCore.Mvc;
 
-namespace LCSoft.ApiKey.Tests
+namespace LCSoft.ApiKey.Tests.AttributeTests
 {
     public class ApiKeyAttributeTests
     {
