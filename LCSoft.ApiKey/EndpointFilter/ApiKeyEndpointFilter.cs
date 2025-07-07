@@ -31,10 +31,12 @@ public class ApiKeyEndpointFilter : IEndpointFilter
         if (!httpContext.Request.Headers.TryGetValue(headerName, out var apiKeyFromHttpHeader)
             || string.IsNullOrWhiteSpace(apiKeyFromHttpHeader))
         {
-            if (!headers.TryGetValue(HeaderNames.Authorization, out var authTokens))
+            if (headers.TryGetValue(HeaderNames.Authorization, out var authTokens))
             {
+                var rawAuthorization = authTokens.FirstOrDefault();
                 // Tenta extrair do header Authorization com esquema "ApiKey"
-                if (AuthenticationHeaderValue.TryParse(HeaderNames.Authorization, out var authHeaderValue))
+                if (!string.IsNullOrWhiteSpace(rawAuthorization) &&
+                    AuthenticationHeaderValue.TryParse(rawAuthorization, out var authHeaderValue))
                 {
                     if (authHeaderValue.Scheme.Equals(Constants.ApiKeyName, StringComparison.OrdinalIgnoreCase))
                     {
@@ -48,7 +50,7 @@ public class ApiKeyEndpointFilter : IEndpointFilter
             }
             else
             {
-                apiKey = authTokens.FirstOrDefault();
+                return new UnauthorizedHttpObjectResult("ApiKey is missing.");
             }
         }
         else
@@ -56,12 +58,7 @@ public class ApiKeyEndpointFilter : IEndpointFilter
             apiKey = apiKeyFromHttpHeader.ToString();
         }
 
-        if (string.IsNullOrWhiteSpace(apiKey))
-        {
-            return new UnauthorizedHttpObjectResult("ApiKey is invalid.");
-        }
-
-        if (!_apiKeyValidation.IsValid(apiKey))
+        if (!_apiKeyValidation.IsValid(apiKey!))
         {
             return new UnauthorizedHttpObjectResult("ApiKey is invalid.");
         }

@@ -1,10 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	  <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+	<TargetFrameworks>net6;net7;net8.0;net9.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+	<EnableDefaultItems>false</EnableDefaultItems>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,7 +20,36 @@
     <ProjectReference Include="..\LCSoft.ApiKey\LCSoft.ApiKey.csproj" />
   </ItemGroup>
 
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
+		<DefineConstants>NET6_0</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net7.0'">
+		<DefineConstants>NET7_0_OR_GREATER</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
+		<DefineConstants>NET7_0_OR_GREATER</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0'">
+		<DefineConstants>NET7_0_OR_GREATER</DefineConstants>
+	</PropertyGroup>
+
+	<!-- Incluir todos os arquivos .cs -->
   <ItemGroup>
+    <Compile Include="**\*.cs" Exclude="obj\**\*.*;EndpointFilterTests\**\*.cs" />
+  </ItemGroup>
+	
+	<ItemGroup Condition="'$(TargetFramework)' != 'net6.0'">
+		<Compile Include="EndpointFilterTests\**\*.cs" />
+	</ItemGroup>
+
+	<!--<ItemGroup Condition="'$(TargetFramework)' != 'net6.0'">
+		<Compile Include="EndpointFilterTests\**\*.cs" />
+	</ItemGroup>-->
+	
+	<ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 
