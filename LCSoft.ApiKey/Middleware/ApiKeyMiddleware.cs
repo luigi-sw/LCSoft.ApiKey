@@ -38,7 +38,8 @@ public class ApiKeyMiddleware
                     await _next(context);
                     return;
                 }
-            } else
+            } 
+            else
             {
                 // For minimal API (.AllowAnonymous())
                 var allowanonymousAttribute = endpoint.Metadata.GetMetadata<AllowAnonymousAttribute>();
@@ -60,10 +61,11 @@ public class ApiKeyMiddleware
 
         if (!success)
         {
-            if (!context.Request.Headers.TryGetValue(HeaderNames.Authorization, out var authTokens))
+            if (context.Request.Headers.TryGetValue(HeaderNames.Authorization, out var authTokens))
             {
+                var authHeaderRaw = authTokens.ToString();
                 // Tenta extrair do header Authorization com esquema "ApiKey"
-                if (AuthenticationHeaderValue.TryParse(HeaderNames.Authorization, out var authHeaderValue))
+                if (AuthenticationHeaderValue.TryParse(authHeaderRaw, out var authHeaderValue))
                 {
                     if (authHeaderValue.Scheme.Equals(Constants.ApiKeyName, StringComparison.OrdinalIgnoreCase))
                     {
@@ -79,7 +81,9 @@ public class ApiKeyMiddleware
             }
             else
             {
-                apiKey = authTokens.FirstOrDefault();
+                context.Response.StatusCode = 401;
+                await context.Response.WriteAsync("The Api Key for accessing this endpoint is not available");
+                return;
             }
         }
         else

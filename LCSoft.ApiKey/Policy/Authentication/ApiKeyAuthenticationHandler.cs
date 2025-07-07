@@ -51,7 +51,7 @@ internal class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthent
         }
         else if (Request.Headers.TryGetValue(HeaderNames.Authorization, out var authHeader) &&
                  AuthenticationHeaderValue.TryParse(authHeader, out AuthenticationHeaderValue? headerValue) &&
-                 headerValue.Scheme.Equals(Constants.Scheme, StringComparison.OrdinalIgnoreCase))
+                 headerValue.Scheme.Equals(Constants.ApiKeyName, StringComparison.OrdinalIgnoreCase))
         {
             if (headerValue.Parameter is null)
             {
@@ -88,12 +88,12 @@ internal class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthent
             new(Constants.ApiKeyName, apiKey)
         };
 
-        if (roles?.Length > 0)
+        if (roles.Length > 0)
         {
             claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
         }
 
-        if (scopes?.Length > 0)
+        if (scopes.Length > 0)
         {
             claims.AddRange(scopes.Select(scope => new Claim("scope", scope)));
         }
