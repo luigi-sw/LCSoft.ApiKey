@@ -188,7 +188,7 @@ public class ApiKeyAuthenticationExtensionsTests
     }
 
     // Fake IApiKeyValidator só para testes
-    private class FakeApiKeyValidator : IApiKeyValidator { public bool IsValid(string apiKey) => true;
+    private class FakeApiKeyValidator : IApiKeyValidator { public Results<bool> IsValid(string apiKey) => true;
 
         public Results<ApiKeyInfo> ValidateAndGetInfo(string apiKey)
         {

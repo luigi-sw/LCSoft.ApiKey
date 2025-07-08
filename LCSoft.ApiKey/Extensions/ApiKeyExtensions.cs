@@ -123,6 +123,13 @@ public static class ApiKeyExtensions
                 })
                 .AddApiKey<TValidator>(ApiKeyAuthenticationOptions.Scheme, options);
 
+        services.TryAddScoped<IApiKeyValidationStrategyFactory, ApiKeyValidationStrategyFactory>();
+
+        services.TryAddEnumerable(new[]
+        {
+            ServiceDescriptor.Scoped<IApiKeyValidationStrategy, DefaultApiKeyStrategy>()
+        });
+
         return services;
     }
 
@@ -171,13 +178,25 @@ public static class ApiKeyExtensions
         else if (configuration != null)
         {
             services.Configure<ApiSettings>(configuration.GetSection(sectionName));
+            services.Configure<DefaultApiKeyStrategyOptions>(configuration.GetSection($"{sectionName}:Default"));
         }
         else
         {
             services.Configure<ApiSettings>(opts => { });
+            services.Configure<DefaultApiKeyStrategyOptions>(opts =>
+            {
+                opts.ApiKeys = new List<string> { "" };
+            });
         }
+        
+        services.TryAddScoped<IApiKeyValidator, ApiKeyValidator>();
+        services.TryAddScoped<IApiKeyValidationStrategyFactory, ApiKeyValidationStrategyFactory>();
 
-        services.TryAddTransient<IApiKeyValidator, ApiKeyValidator>();
+        services.TryAddEnumerable(new[]
+        {
+            ServiceDescriptor.Scoped<IApiKeyValidationStrategy, DefaultApiKeyStrategy>()
+        });
+
         return services;
     }
 }

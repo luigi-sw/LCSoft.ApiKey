@@ -9,6 +9,7 @@ using LCSoft.ApiKey.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Routing;
 using LCSoft.ApiKey.Attribute;
+using LCSoft.Results;
 
 
 namespace LCSoft.ApiKey.Tests.AttributeTests;
@@ -63,7 +64,7 @@ public class CustomApiKeyAttributeTests
     {
         // Arrange
         var apiKeyValidator = Substitute.For<IApiKeyValidator>();
-        apiKeyValidator.IsValid("valid-key").Returns(true);
+        apiKeyValidator.IsValid("valid-key").Returns(Results<bool>.Success(true));
 
         var context = CreateContext(
             apiKeyValidator: apiKeyValidator,
@@ -108,7 +109,7 @@ public class CustomApiKeyAttributeTests
     {
         // Arrange
         var apiKeyValidator = Substitute.For<IApiKeyValidator>();
-        apiKeyValidator.IsValid("invalid").Returns(false);
+        apiKeyValidator.IsValid("invalid").Returns(Results<bool>.Failure(StandardErrorType.GenericFailure));
 
         var context = CreateContext(
             apiKeyValidator: apiKeyValidator,
@@ -131,7 +132,7 @@ public class CustomApiKeyAttributeTests
     {
         // Arrange
         var apiKeyValidator = Substitute.For<IApiKeyValidator>();
-        apiKeyValidator.IsValid("custom-key").Returns(true);
+        apiKeyValidator.IsValid("custom-key").Returns(Results<bool>.Success(true));
 
         var context = CreateContext(
             apiKeyValidator: apiKeyValidator,
@@ -152,7 +153,7 @@ public class CustomApiKeyAttributeTests
     {
         // Arrange
         var apiKeyValidator = Substitute.For<IApiKeyValidator>();
-        apiKeyValidator.IsValid("auth-key").Returns(true);
+        apiKeyValidator.IsValid("auth-key").Returns(Results<bool>.Success(true));
 
         var authHeader = new AuthenticationHeaderValue(Constants.ApiKeyName, "auth-key").ToString();
 
@@ -179,6 +180,64 @@ public class CustomApiKeyAttributeTests
         var context = CreateContext(
             apiKeyValidator: apiKeyValidator,
             headers: new() { { Constants.ApiKeyHeaderName, "" } } // <-- chave presente mas vazia
+        );
+
+        var attribute = new CustomApiKeyAttribute();
+
+        // Act
+        await attribute.OnActionExecutionAsync(context, () => Task.FromResult<ActionExecutedContext>(null));
+
+        // Assert
+        var result = Assert.IsType<ContentResult>(context.Result);
+        Assert.Equal(401, result.StatusCode);
+        Assert.Equal("The Api key is incorrect : Unauthorized access", result.Content);
+    }
+
+    [Fact]
+    public async Task OnActionExecutionAsync_HeaderPresent_Returns401()
+    {
+        // Arrange
+        var apiKeyValidator = Substitute.For<IApiKeyValidator>();
+
+        var options = Substitute.For<IOptions<ApiSettings>>();
+        options.Value.Returns(new ApiSettings
+        {
+            HeaderName = null
+        });
+
+        var context = CreateContext(
+            apiKeyValidator: apiKeyValidator,
+            options: options,
+            headers: new() { { Constants.ApiKeyHeaderName, "" } } 
+        );
+
+        var attribute = new CustomApiKeyAttribute();
+
+        // Act
+        await attribute.OnActionExecutionAsync(context, () => Task.FromResult<ActionExecutedContext>(null));
+
+        // Assert
+        var result = Assert.IsType<ContentResult>(context.Result);
+        Assert.Equal(401, result.StatusCode);
+        Assert.Equal("The Api key is incorrect : Unauthorized access", result.Content);
+    }
+
+    [Fact]
+    public async Task OnActionExecutionAsync_HeaderConstructorPresent_Returns401()
+    {
+        // Arrange
+        var apiKeyValidator = Substitute.For<IApiKeyValidator>();
+
+        var options = Substitute.For<IOptions<ApiSettings>>();
+        options.Value.Returns(new ApiSettings
+        {
+            HeaderName = "X-Api-Key"
+        });
+
+        var context = CreateContext(
+            apiKeyValidator: apiKeyValidator,
+            options: options,
+            headers: new() { { Constants.ApiKeyHeaderName, "" } }
         );
 
         var attribute = new CustomApiKeyAttribute();

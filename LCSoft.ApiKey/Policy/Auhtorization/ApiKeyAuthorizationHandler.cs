@@ -49,7 +49,7 @@ internal class ApiKeyAuthorizationHandler : AuthorizationHandler<ApiKeyRequireme
         if (string.IsNullOrWhiteSpace(apiKey))
             return false;
 
-        if (!_apiKeyValidation.IsValid(apiKey))
+        if (!_apiKeyValidation.IsValid(apiKey).IsSuccess)
             return false;
 
         context.Succeed(requirement);

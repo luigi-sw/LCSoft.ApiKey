@@ -50,7 +50,7 @@ public class CustomAuthorization : System.Attribute, IAuthorizationFilter
                     authToken = authHeaderValue.Parameter;
                     if (!string.IsNullOrWhiteSpace(authToken))
                     {
-                        if (!apiKeyValidator!.IsValid(authToken))
+                        if (!apiKeyValidator!.IsValid(authToken).IsSuccess)
                         {
                             SetForbiddenResult(filterContext, "The Api key is incorrect : Unauthorized access");
                             return;
@@ -61,7 +61,7 @@ public class CustomAuthorization : System.Attribute, IAuthorizationFilter
                 else if (!string.IsNullOrWhiteSpace(firstToken))
                 {
                     authToken = firstToken;
-                    if (!apiKeyValidator!.IsValid(authToken))
+                    if (!apiKeyValidator!.IsValid(authToken).IsSuccess)
                     {
                         SetForbiddenResult(filterContext, "The Api key is incorrect : Unauthorized access");
                         return;
@@ -77,7 +77,7 @@ public class CustomAuthorization : System.Attribute, IAuthorizationFilter
             var apiKeyValue = apiKeyTokens.FirstOrDefault();
 
             //if the API-Key value is not null. validate the API-Key.  
-            if (string.IsNullOrWhiteSpace(apiKeyValue) || !apiKeyValidator.IsValid(apiKeyValue!))
+            if (string.IsNullOrWhiteSpace(apiKeyValue) || !apiKeyValidator.IsValid(apiKeyValue!).IsSuccess)
             {
                 SetForbiddenResult(filterContext, "Please Provide valid auth Token");
                 return;

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using System.Net.Http.Headers;
 using NSubstitute;
+using LCSoft.Results;
 
 namespace LCSoft.ApiKey.Tests.AttributeTests;
 
@@ -21,7 +22,11 @@ public class ApiKeyAuthorizationFilterTests
         bool isValid = true)
     {
         var apiKeyValidator = Substitute.For<IApiKeyValidator>();
-        apiKeyValidator.IsValid(Arg.Any<string>()).Returns(isValid);
+
+        if (isValid)
+            apiKeyValidator.IsValid(Arg.Any<string>()).Returns(Results<bool>.Success(true));
+        else
+            apiKeyValidator.IsValid(Arg.Any<string>()).Returns(Results<bool>.Failure(StandardErrorType.GenericFailure));
 
         var options = Substitute.For<IOptions<ApiSettings>>();
         options.Value.Returns(new ApiSettings
@@ -123,11 +128,40 @@ public class ApiKeyAuthorizationFilterTests
     }
 
     [Fact]
-    public void AuthorizationHeader_With_Invalid_Scheme_Should_Return_Unauthorized()
+    public void AuthorizationHeader_With_Invalid_Scheme_Should_Pass()
     {
         // Arrange
         var filter = CreateFilter();
 
+        var invalidAuthHeader = new AuthenticationHeaderValue("Bearer", ValidApiKey).ToString();
+
+        var context = CreateContextWithHeaders(new()
+        {
+            { HeaderNames.Authorization, invalidAuthHeader }
+        });
+
+        // Act
+        filter.OnAuthorization(context);
+
+        // Assert
+        Assert.IsType<UnauthorizedResult>(context.Result);
+    }
+
+    [Fact]
+    public void AuthorizationHeader_With_Valid_Scheme_Should_Return_Unauthorized()
+    {
+        // Arrange
+        var apiKeyValidator = Substitute.For<IApiKeyValidator>();
+
+        apiKeyValidator.IsValid(Arg.Any<string>()).Returns(Results<bool>.Success(true));
+        var options = Substitute.For<IOptions<ApiSettings>>();
+        options.Value.Returns(new ApiSettings
+        {
+            HeaderName = null
+        });
+
+        var filter = new ApiKeyAuthorizationFilter(apiKeyValidator, options);
+         
         var invalidAuthHeader = new AuthenticationHeaderValue("Bearer", ValidApiKey).ToString();
 
         var context = CreateContextWithHeaders(new()

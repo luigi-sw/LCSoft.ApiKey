@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using NSubstitute;
 using System.Net.Http.Headers;
+using LCSoft.Results;
 
 namespace LCSoft.ApiKey.Tests.EndpointFilterTests;
 
@@ -44,7 +45,7 @@ public class ApiKeyEndpointFilterTests
     {
         // Arrange
         var validator = Substitute.For<IApiKeyValidator>();
-        validator.IsValid(ValidApiKey).Returns(true);
+        validator.IsValid(ValidApiKey).Returns(Results<bool>.Success(true));
 
         var options = Substitute.For<IOptions<ApiSettings>>();
         var apiSettings = new ApiSettings { HeaderName = CustomHeaderName };
@@ -90,7 +91,7 @@ public class ApiKeyEndpointFilterTests
     {
         // Arrange
         var validator = Substitute.For<IApiKeyValidator>();
-        validator.IsValid(InvalidApiKey).Returns(false);
+        validator.IsValid(InvalidApiKey).Returns(Results<bool>.Failure(StandardErrorType.GenericFailure));
 
         var options = Substitute.For<IOptions<ApiSettings>>();
         options.Value.Returns(new ApiSettings { HeaderName = CustomHeaderName });
@@ -115,7 +116,7 @@ public class ApiKeyEndpointFilterTests
         var validKey = "valid-key";
 
         var validator = Substitute.For<IApiKeyValidator>();
-        validator.IsValid(validKey).Returns(true);
+        validator.IsValid(validKey).Returns(Results<bool>.Success(true));
 
         var options = Options.Create(new ApiSettings { HeaderName = "X-Api-Key" });
 
@@ -146,7 +147,7 @@ public class ApiKeyEndpointFilterTests
         var validKey = "my-secret-key";
 
         var validator = Substitute.For<IApiKeyValidator>();
-        validator.IsValid(validKey).Returns(true);
+        validator.IsValid(validKey).Returns(Results<bool>.Success(true));
 
         var options = Options.Create(new ApiSettings { HeaderName = "X-Api-Key" });
 
@@ -179,7 +180,7 @@ public class ApiKeyEndpointFilterTests
         var validApiKey = "valid-key";
 
         var validator = Substitute.For<IApiKeyValidator>();
-        validator.IsValid(validApiKey).Returns(true);
+        validator.IsValid(validApiKey).Returns(Results<bool>.Success(true));
 
         var options = Options.Create(new ApiSettings { HeaderName = "X-Api-Key" });
 
@@ -238,7 +239,7 @@ public class ApiKeyEndpointFilterTests
         var httpContext = new DefaultHttpContext();
 
         var validator = Substitute.For<IApiKeyValidator>();
-        //validator.IsValid(validApiKey).Returns(true);
+        //validator.IsValid(validApiKey).Returns(Results<bool>.Success(true));
 
         var options = Options.Create(new ApiSettings { HeaderName = "X-Api-Key" });
 

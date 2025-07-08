@@ -58,7 +58,7 @@ public class ApiKeyEndpointFilter : IEndpointFilter
             apiKey = apiKeyFromHttpHeader.ToString();
         }
 
-        if (!_apiKeyValidation.IsValid(apiKey!))
+        if (!_apiKeyValidation.IsValid(apiKey!).IsSuccess)
         {
             return new UnauthorizedHttpObjectResult("ApiKey is invalid.");
         }

@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using NSubstitute;
 using System.Net.Http.Headers;
+using LCSoft.Results;
 
 namespace LCSoft.ApiKey.Tests.EndpointFilterTests;
 
@@ -46,7 +47,7 @@ public class ApiKeyEndpointFilterFactoryTests
     {
         // Arrange
         var validator = Substitute.For<IApiKeyValidator>();
-        validator.IsValid("bad-key").Returns(false);
+        validator.IsValid("bad-key").Returns(Results<bool>.Failure(StandardErrorType.GenericFailure));
 
         var options = Options.Create(new ApiSettings { HeaderName = "X-Api-Key" });
 
@@ -78,7 +79,7 @@ public class ApiKeyEndpointFilterFactoryTests
     {
         // Arrange
         var validator = Substitute.For<IApiKeyValidator>();
-        validator.IsValid("valid-key").Returns(true);
+        validator.IsValid("valid-key").Returns(Results<bool>.Success(true));
 
         var options = Options.Create(new ApiSettings { HeaderName = "X-Api-Key" });
 

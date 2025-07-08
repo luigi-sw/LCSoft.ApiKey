@@ -1,6 +1,7 @@
 ﻿using LCSoft.ApiKey.Middleware;
 using LCSoft.ApiKey.Models;
 using LCSoft.ApiKey.Validation;
+using LCSoft.Results;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -71,7 +72,7 @@ public class ApiKeyMiddlewareTests
     [Fact]
     public async Task InvokeAsync_WithValidApiKeyHeader_AllowsRequest()
     {
-        _validator.IsValid("valid-key").Returns(true);
+        _validator.IsValid("valid-key").Returns(Results<bool>.Success(true));
         var context = CreateHttpContext(apiKey: "valid-key");
 
         var middleware = new ApiKeyMiddleware(_next, _validator, _options);
@@ -84,7 +85,7 @@ public class ApiKeyMiddlewareTests
     [Fact]
     public async Task InvokeAsync_WithInvalidApiKeyHeader_ReturnsUnauthorized()
     {
-        _validator.IsValid("invalid-key").Returns(false);
+        _validator.IsValid("invalid-key").Returns(Results<bool>.Failure(StandardErrorType.GenericFailure));
         var context = CreateHttpContext(apiKey: "invalid-key");
 
         var middleware = new ApiKeyMiddleware(_next, _validator, _options);
@@ -117,7 +118,7 @@ public class ApiKeyMiddlewareTests
             wasCalled = true;
             return Task.CompletedTask;
         };
-        _validator.IsValid("auth-key").Returns(true);
+        _validator.IsValid("auth-key").Returns(Results<bool>.Success(true));
         var context = CreateHttpContext(authorizationHeader: "ApiKey auth-key");
 
         var middleware = new ApiKeyMiddleware(next, _validator, _options);
@@ -209,7 +210,7 @@ public class ApiKeyMiddlewareTests
         };
 
         var validator = Substitute.For<IApiKeyValidator>();
-        validator.IsValid("xyz456").Returns(true);
+        validator.IsValid("xyz456").Returns(Results<bool>.Success(true));
 
         var options = Options.Create(new ApiSettings
         {

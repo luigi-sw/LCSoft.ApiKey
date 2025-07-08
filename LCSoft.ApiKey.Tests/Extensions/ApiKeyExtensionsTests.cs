@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace LCSoft.ApiKey.Tests.Extensions;
@@ -32,6 +33,7 @@ public class ApiKeyExtensionsTests
         .Build();
 
         services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(config);
+        services.AddSingleton(typeof(ILogger<>), typeof(Microsoft.Extensions.Logging.Abstractions.NullLogger<>));
 
         var result = services.RegisterApiKeyFilterAuthorization(config, "ApiKey");
 
@@ -58,6 +60,7 @@ public class ApiKeyExtensionsTests
         var services = new ServiceCollection();
 
         services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(configuration);
+        services.AddSingleton(typeof(ILogger<>), typeof(Microsoft.Extensions.Logging.Abstractions.NullLogger<>));
 
         services.AddSingleton<RequestDelegate>(_ => context => Task.CompletedTask);
 
@@ -113,6 +116,7 @@ public class ApiKeyExtensionsTests
             .AddInMemoryCollection(inMemorySettings)
             .Build();
         services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(configuration);
+        services.AddSingleton(typeof(ILogger<>), typeof(Microsoft.Extensions.Logging.Abstractions.NullLogger<>));
 
         // Act
         services.RegisterApiKeyFilterAuthorization(options =>
@@ -193,6 +197,10 @@ public class ApiKeyExtensionsTests
             .AddInMemoryCollection(inMemorySettings)
             .Build();
         services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(configuration);
+        services.AddSingleton(typeof(ILogger<>), typeof(Microsoft.Extensions.Logging.Abstractions.NullLogger<>));
+        services.AddScoped<IApiKeyValidationStrategyFactory, ApiKeyValidationStrategyFactory>();
+        services.AddScoped<IApiKeyValidationStrategy, DefaultApiKeyStrategy>();
+
 
         // Act
         services.RegisterApiKeyPolicyAuthentication(options =>
@@ -223,7 +231,7 @@ public class ApiKeyExtensionsTests
             .AddInMemoryCollection(inMemorySettings)
             .Build();
         services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(configuration);
-
+        services.AddSingleton(typeof(ILogger<>), typeof(Microsoft.Extensions.Logging.Abstractions.NullLogger<>));
 
         // Act
         services.RegisterApiKeyEndpointFilter(
@@ -279,8 +287,9 @@ public class ApiKeyExtensionsTests
             .AddInMemoryCollection(inMemorySettings)
             .Build();
         services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(configuration);
-
-
+        services.AddScoped<IApiKeyValidationStrategyFactory, ApiKeyValidationStrategyFactory>();
+        services.AddScoped<IApiKeyValidationStrategy, DefaultApiKeyStrategy>();
+        services.AddLogging();
         // Act
         services.RegisterApiKeyPolicyAuthorization(
             configuration: null,
@@ -312,7 +321,7 @@ public class ApiKeyExtensionsTests
             .AddInMemoryCollection(inMemorySettings)
             .Build();
         services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(configuration);
-
+services.AddSingleton(typeof(ILogger<>), typeof(Microsoft.Extensions.Logging.Abstractions.NullLogger<>));
 
         // Act
         services.RegisterApiKeyPolicyAuthorization(
@@ -346,7 +355,7 @@ public class ApiKeyExtensionsTests
             .AddInMemoryCollection(inMemorySettings)
             .Build();
         services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(configuration);
-
+        services.AddSingleton(typeof(ILogger<>), typeof(Microsoft.Extensions.Logging.Abstractions.NullLogger<>));
 
         // Act
         var result = ApiKeyExtensions.RegisterApiKeyPolicyAuthorization(services);
@@ -362,7 +371,7 @@ public class ApiKeyExtensionsTests
         // Valida se o serviço de autenticação foi adicionado
         var authOptions = provider.GetRequiredService<IOptions<AuthenticationOptions>>().Value;
         Assert.Equal(JwtBearerDefaults.AuthenticationScheme, authOptions.DefaultAuthenticateScheme);
-    #endif
+#endif
     }
 
 #if NET6_0
@@ -379,7 +388,9 @@ public class ApiKeyExtensionsTests
             .AddInMemoryCollection(inMemorySettings)
             .Build();
         services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(configuration);
-
+        services.AddScoped<IApiKeyValidationStrategyFactory, ApiKeyValidationStrategyFactory>();
+        services.AddScoped<IApiKeyValidationStrategy, DefaultApiKeyStrategy>();
+        services.AddLogging();
 
         // Act
         services.RegisterApiKeyPolicyAuthorization();

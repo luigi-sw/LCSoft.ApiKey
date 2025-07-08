@@ -97,7 +97,7 @@ public class ApiKeyMiddleware
             return;
         }
 
-        if (!_apiKeyValidation.IsValid(apiKey))
+        if (!_apiKeyValidation.IsValid(apiKey).IsSuccess)
         {
             context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             return;

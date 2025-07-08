@@ -1,6 +1,7 @@
 ﻿
 using LCSoft.ApiKey.Policy.Auhtorization;
 using LCSoft.ApiKey.Validation;
+using LCSoft.Results;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using NSubstitute;
@@ -34,7 +35,7 @@ public class ApiKeyAuthorizationHandlerTests
         // Arrange
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Headers[Constants.ApiKeyHeaderName] = "valid-key";
-        _validator.IsValid("valid-key").Returns(true);
+        _validator.IsValid("valid-key").Returns(Results<bool>.Success(true));
 
         var context = CreateContext(httpContext);
 
@@ -52,7 +53,7 @@ public class ApiKeyAuthorizationHandlerTests
         // Arrange
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Headers["Authorization"] = "ApiKey valid-token";
-        _validator.IsValid("valid-token").Returns(true);
+        _validator.IsValid("valid-token").Returns(Results<bool>.Success(true));
 
         var context = CreateContext(httpContext);
 
@@ -85,7 +86,7 @@ public class ApiKeyAuthorizationHandlerTests
         // Arrange
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Headers[Constants.ApiKeyHeaderName] = "invalid-key";
-        _validator.IsValid("invalid-key").Returns(false);
+        _validator.IsValid("invalid-key").Returns(Results<bool>.Failure(StandardErrorType.GenericFailure));
 
         var context = CreateContext(httpContext);
 
@@ -138,7 +139,7 @@ public class ApiKeyAuthorizationHandlerTests
         httpContext.Request.Headers[Constants.ApiKeyHeaderName] = "valid-key";
 
         var validator = Substitute.For<IApiKeyValidator>();
-        validator.IsValid("valid-key").Returns(true);
+        validator.IsValid("valid-key").Returns(Results<bool>.Success(true));
 
         var handler = new ApiKeyAuthorizationHandler(validator);
         var requirement = new ApiKeyRequirement();

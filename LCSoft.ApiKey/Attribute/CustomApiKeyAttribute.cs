@@ -77,7 +77,7 @@ public class CustomApiKeyAttribute : System.Attribute, IAsyncActionFilter
             return;
         }
         
-        if (!apiKeyValidator.IsValid(apiKey))
+        if (!apiKeyValidator.IsValid(apiKey).IsSuccess)
         {
             context.Result = new ContentResult()
             {
