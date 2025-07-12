@@ -31,6 +31,9 @@ internal class DefaultApiKeyStrategy : IApiKeyValidationStrategy
         if (string.IsNullOrWhiteSpace(apiKey))
             return Results<ApiKeyInfo>.Failure(StandardErrorType.Validation);
 
+        if (!IsValid(apiKey).Value)
+            return Results<ApiKeyInfo>.Failure(StandardErrorType.Validation);
+
         try
         {
             var bytes = Convert.FromBase64String(apiKey);

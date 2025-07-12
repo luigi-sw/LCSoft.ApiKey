@@ -98,7 +98,7 @@ public class DefaultApiKeyStrategyTests
         var json = JsonSerializer.Serialize(info);
         var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(json));
 
-        var strategy = CreateStrategy();
+        var strategy = CreateStrategy(new[] { base64 });
 
         var result = strategy.ValidateAndGetInfo(base64);
 
@@ -108,6 +108,42 @@ public class DefaultApiKeyStrategyTests
         Assert.Equal(info.Owner, result.Value.Owner);
         Assert.Equal(info.Roles, result.Value.Roles);
         Assert.Equal(info.Scopes, result.Value.Scopes);
+    }
+
+    [Fact]
+    public void ValidateAndGetInfo_ReturnsFailure_WhenIsNotValidJson()
+    {
+        var nullJson = "null";
+        var base64NullJson = Convert.ToBase64String(Encoding.UTF8.GetBytes(nullJson));
+
+        var strategy = CreateStrategy(new[] { base64NullJson });
+
+        var result = strategy.ValidateAndGetInfo(base64NullJson);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StandardErrorType.Validation, result.Error);
+    }
+
+    [Fact]
+    public void ValidateAndGetInfo_ReturnFailure_Throws()
+    {
+        var strategy = CreateStrategy(new[] { "{}" });
+
+        var result = strategy.ValidateAndGetInfo("{}");
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StandardErrorType.Validation, result.Error);
+    }
+
+    [Fact]
+    public void ValidateAndGetInfo_ReturnsFailure_WhenApiKeyIsNotValid()
+    {
+        var strategy = CreateStrategy(new[] { "key123" });
+
+        var result = strategy.ValidateAndGetInfo("base64");
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(StandardErrorType.Validation, result.Error);
     }
 
     [Fact]
