@@ -5,8 +5,10 @@ using LCSoft.Results;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NSubstitute;
+using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Reflection;
 
@@ -24,9 +26,26 @@ public class ApiKeyMiddlewareTests
         _options = Options.Create(_settings);
     }
 
-    private static HttpContext CreateHttpContext(string? apiKey = null, string? authorizationHeader = null, Endpoint? endpoint = null)
+    private static HttpContext CreateHttpContext(string? apiKey = null, 
+        string? authorizationHeader = null, 
+        Endpoint? endpoint = null,
+        ServiceCollection? services = null)
     {
-        var context = new DefaultHttpContext();
+        if (services == null)
+        {
+            services = new ServiceCollection();
+            services.AddSingleton(Substitute.For<IApiKeyValidator>());
+            services.AddSingleton(Substitute.For<IApiKeyValidationStrategy>());
+            services.AddSingleton(Substitute.For<IApiKeyValidationStrategyFactory>());
+            services.AddSingleton(Options.Create(new ApiSettings { HeaderName = "X-Api-Key" }));
+        }
+
+        var serviceProvider = services.BuildServiceProvider();
+
+        var context = new DefaultHttpContext()
+        {
+            RequestServices = serviceProvider
+        };
         context.Response.Body = new MemoryStream();
 
         if (apiKey != null)
@@ -45,7 +64,7 @@ public class ApiKeyMiddlewareTests
     {
         var context = CreateHttpContext(endpoint: CreateEndpointWithControllerAllowAnonymous());
 
-        var middleware = new ApiKeyMiddleware(_next, _validator, _options);
+        var middleware = new ApiKeyMiddleware(_next);
 
         await middleware.InvokeAsync(context);
 
@@ -62,7 +81,7 @@ public class ApiKeyMiddlewareTests
 
         var context = CreateHttpContext(endpoint: endpoint);
 
-        var middleware = new ApiKeyMiddleware(_next, _validator, _options);
+        var middleware = new ApiKeyMiddleware(_next);
 
         await middleware.InvokeAsync(context);
 
@@ -72,10 +91,16 @@ public class ApiKeyMiddlewareTests
     [Fact]
     public async Task InvokeAsync_WithValidApiKeyHeader_AllowsRequest()
     {
-        _validator.IsValid("valid-key").Returns(Results<bool>.Success(true));
-        var context = CreateHttpContext(apiKey: "valid-key");
+        IApiKeyValidator validator = Substitute.For<IApiKeyValidator>();
+        IOptions<ApiSettings> options = Options.Create(new ApiSettings { HeaderName = "X-Api-Key" });
+        var services = new ServiceCollection();
+        services.AddSingleton(validator);
+        services.AddSingleton(options);
 
-        var middleware = new ApiKeyMiddleware(_next, _validator, _options);
+        validator.IsValid("valid-key").Returns(Results<bool>.Success(true));
+        var context = CreateHttpContext(apiKey: "valid-key", services: services);
+
+        var middleware = new ApiKeyMiddleware(_next);
 
         await middleware.InvokeAsync(context);
 
@@ -85,10 +110,16 @@ public class ApiKeyMiddlewareTests
     [Fact]
     public async Task InvokeAsync_WithInvalidApiKeyHeader_ReturnsUnauthorized()
     {
-        _validator.IsValid("invalid-key").Returns(Results<bool>.Failure(StandardErrorType.GenericFailure));
-        var context = CreateHttpContext(apiKey: "invalid-key");
+        IApiKeyValidator validator = Substitute.For<IApiKeyValidator>();
+        IOptions<ApiSettings> options = Options.Create(new ApiSettings { HeaderName = "X-Api-Key" });
+        var services = new ServiceCollection();
+        services.AddSingleton(validator);
+        services.AddSingleton(options);
 
-        var middleware = new ApiKeyMiddleware(_next, _validator, _options);
+        validator.IsValid("invalid-key").Returns(Results<bool>.Failure(StandardErrorType.GenericFailure));
+        var context = CreateHttpContext(apiKey: "invalid-key", services: services);
+
+        var middleware = new ApiKeyMiddleware(_next);
 
         await middleware.InvokeAsync(context);
 
@@ -99,9 +130,15 @@ public class ApiKeyMiddlewareTests
     [Fact]
     public async Task InvokeAsync_WithoutApiKey_ReturnsUnauthorized()
     {
-        var context = CreateHttpContext();
+        var validator = Substitute.For<IApiKeyValidator>();
+        IOptions<ApiSettings> options = Options.Create(new ApiSettings { HeaderName = "X-Api-Key" });
+        var services = new ServiceCollection();
+        services.AddSingleton(validator);
+        services.AddSingleton(options);
+        validator.IsValid(Arg.Any<string>()).Returns(Results<bool>.Failure(StandardErrorType.GenericFailure));
+        var context = CreateHttpContext(services: services);
 
-        var middleware = new ApiKeyMiddleware(_next, _validator, _options);
+        var middleware = new ApiKeyMiddleware(_next);
 
         await middleware.InvokeAsync(context);
 
@@ -112,16 +149,21 @@ public class ApiKeyMiddlewareTests
     [Fact]
     public async Task InvokeAsync_WithApiKeyInAuthorizationHeader_Valid()
     {
+        var validator = Substitute.For<IApiKeyValidator>();
+        IOptions<ApiSettings> options = Options.Create(new ApiSettings { HeaderName = "X-Api-Key" });
+        var services = new ServiceCollection();
+        services.AddSingleton(validator);
+        services.AddSingleton(options);
+        validator.IsValid("auth-key").Returns(Results<bool>.Success(true));
         var wasCalled = false;
         RequestDelegate next = context =>
         {
             wasCalled = true;
             return Task.CompletedTask;
         };
-        _validator.IsValid("auth-key").Returns(Results<bool>.Success(true));
-        var context = CreateHttpContext(authorizationHeader: "ApiKey auth-key");
+        var context = CreateHttpContext(authorizationHeader: "ApiKey auth-key", services: services);
 
-        var middleware = new ApiKeyMiddleware(next, _validator, _options);
+        var middleware = new ApiKeyMiddleware(next);
         // Act
         await middleware.InvokeAsync(context);
 
@@ -132,9 +174,16 @@ public class ApiKeyMiddlewareTests
     [Fact]
     public async Task InvokeAsync_WithAuthorizationHeaderInvalidFormat_ReturnsUnauthorized()
     {
-        var context = CreateHttpContext(authorizationHeader: "Bearer something");
+        var validator = Substitute.For<IApiKeyValidator>();
+        IOptions<ApiSettings> options = Options.Create(new ApiSettings { HeaderName = "X-Api-Key" });
+        var services = new ServiceCollection();
+        services.AddSingleton(validator);
+        services.AddSingleton(options);
+        validator.IsValid(Arg.Any<string>()).Returns(Results<bool>.Failure(StandardErrorType.GenericFailure));
 
-        var middleware = new ApiKeyMiddleware(_next, _validator, _options);
+        var context = CreateHttpContext(authorizationHeader: "Bearer something", services: services);
+
+        var middleware = new ApiKeyMiddleware(_next);
 
         await middleware.InvokeAsync(context);
 
@@ -145,6 +194,7 @@ public class ApiKeyMiddlewareTests
     public async Task InvokeAsync_WithMalformedAuthorizationHeader_ReturnsUnauthorized()
     {
         // Arrange
+        var services = new ServiceCollection();
         var wasCalled = false;
 
         RequestDelegate next = ctx =>
@@ -155,11 +205,16 @@ public class ApiKeyMiddlewareTests
 
         var validator = Substitute.For<IApiKeyValidator>();
         var options = Options.Create(new ApiSettings { HeaderName = "X-Api-Key" });
+        services.AddSingleton(validator);
+        services.AddSingleton(options);
 
-        var context = new DefaultHttpContext();
+        var context = new DefaultHttpContext() 
+        {
+            RequestServices = services.BuildServiceProvider()
+        };
         context.Request.Headers["Authorization"] = "";
 
-        var middleware = new ApiKeyMiddleware(next, validator, options);
+        var middleware = new ApiKeyMiddleware(next);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -173,11 +228,16 @@ public class ApiKeyMiddlewareTests
     public async Task InvokeAsync_WithMvcAllowAnonymousAttribute_SkipsValidation()
     {
         // Arrange
-
+        var services = new ServiceCollection();
         var validator = Substitute.For<IApiKeyValidator>();
         var options = Options.Create(new ApiSettings());
+        services.AddSingleton(validator);
+        services.AddSingleton(options);
 
-        var context = new DefaultHttpContext();
+        var context = new DefaultHttpContext()
+        {
+            RequestServices = services.BuildServiceProvider()
+        };
 
         var methodInfo = typeof(DummyController).GetMethod(nameof(DummyController.ActionWithoutAllowAnonymous));
         var descriptor = new ControllerActionDescriptor
@@ -189,7 +249,7 @@ public class ApiKeyMiddlewareTests
         var metadata = new EndpointMetadataCollection(descriptor);
         context.SetEndpoint(new Endpoint(_ => Task.CompletedTask, metadata, "mvc"));
 
-        var middleware = new ApiKeyMiddleware(_next, validator, options);
+        var middleware = new ApiKeyMiddleware(_next);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -202,6 +262,7 @@ public class ApiKeyMiddlewareTests
     public async Task InvokeAsync_WithEmptyHeaderName_UsesDefaultHeaderConstant()
     {
         // Arrange
+        var services = new ServiceCollection();
         var wasCalled = false;
         RequestDelegate next = ctx =>
         {
@@ -216,11 +277,16 @@ public class ApiKeyMiddlewareTests
         {
             HeaderName = ""
         });
+        services.AddSingleton(validator);
+        services.AddSingleton(options);
 
-        var context = new DefaultHttpContext();
+        var context = new DefaultHttpContext()
+        {
+            RequestServices = services.BuildServiceProvider()
+        };
         context.Request.Headers[Constants.ApiKeyHeaderName] = "xyz456";
 
-        var middleware = new ApiKeyMiddleware(next, validator, options);
+        var middleware = new ApiKeyMiddleware(next);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -233,15 +299,21 @@ public class ApiKeyMiddlewareTests
     public async Task InvokeAsync_WithMinimalApiAllowAnonymous_SkipsValidation()
     {
         // Arrange
+        var services = new ServiceCollection();
         var validator = Substitute.For<IApiKeyValidator>();
         var options = Options.Create(new ApiSettings());
+        services.AddSingleton(validator);
+        services.AddSingleton(options);
 
-        var context = new DefaultHttpContext();
+        var context = new DefaultHttpContext()
+        {
+            RequestServices = services.BuildServiceProvider()
+        };
 
         var metadata = new EndpointMetadataCollection();
         context.SetEndpoint(new Endpoint(_ => Task.CompletedTask, metadata, "minimal"));
 
-        var middleware = new ApiKeyMiddleware(_next, validator, options);
+        var middleware = new ApiKeyMiddleware(_next);
 
         // Act
         await middleware.InvokeAsync(context);

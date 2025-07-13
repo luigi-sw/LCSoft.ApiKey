@@ -6,9 +6,9 @@ namespace LCSoft.ApiKey.Debugger.MiddlewareVersion;
 public static class MiddlewareVersionExtensions
 {
     public static IServiceCollection RegisterUsingMiddleware(
-        this IServiceCollection services, IConfiguration configuration)
+        this IServiceCollection services)
     {
-        services.RegisterApiKeyMiddleware(configuration, opts => { });
+        services.RegisterApiKeyMiddleware();
         return services;
     }
 

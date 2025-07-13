@@ -9,6 +9,7 @@ using LCSoft.ApiKey.Policy.Authentication;
 using LCSoft.ApiKey.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -52,14 +53,16 @@ public static class ApiKeyExtensions
     {
         services.RegisterApikeyServices(configuration, configureOptions, sectionName);
 
-        services.AddScoped<CustomAuthorization>();
-
         if (applyGlobally)
         {
+            services.AddScoped<CustomAuthorization>();
             services.Configure<MvcOptions>(options =>
             {
                 options.Filters.AddService<CustomAuthorization>();
             });
+        } else
+        {
+            services.AddScoped<IAuthorizationFilter, CustomAuthorization>();
         }
 
         return services;
@@ -91,12 +94,12 @@ public static class ApiKeyExtensions
                 })
                 .AddJwtBearer();
 
-                services.AddAuthorization(options =>
-                {
-                    options.DefaultPolicy = new AuthorizationPolicyBuilder(BearerScheme)
-                        .AddRequirements(new ApiKeyRequirement())
-                        .Build();
-                });
+        services.AddAuthorization(options =>
+        {
+            options.DefaultPolicy = new AuthorizationPolicyBuilder(BearerScheme)
+                .AddRequirements(new ApiKeyRequirement())
+                .Build();
+        });
         #endif
 
         services.AddScoped<IAuthorizationHandler, ApiKeyAuthorizationHandler>();
@@ -123,12 +126,7 @@ public static class ApiKeyExtensions
                 })
                 .AddApiKey<TValidator>(ApiKeyAuthenticationOptions.Scheme, options);
 
-        services.TryAddScoped<IApiKeyValidationStrategyFactory, ApiKeyValidationStrategyFactory>();
-
-        services.TryAddEnumerable(new[]
-        {
-            ServiceDescriptor.Scoped<IApiKeyValidationStrategy, DefaultApiKeyStrategy>()
-        });
+        services.RegisterApikeyServices();
 
         return services;
     }
@@ -143,7 +141,7 @@ public static class ApiKeyExtensions
     {
         if (!useFactory)
         {
-            services.AddSingleton<ApiKeyEndpointFilter>();
+            services.AddScoped<ApiKeyEndpointFilter>();
         }
 
         services.RegisterApikeyServices(configuration, configureOptions, sectionName);
@@ -159,7 +157,6 @@ public static class ApiKeyExtensions
         string sectionName = Constants.ApiKeyName)
     {
         services.RegisterApikeyServices(configuration, configureOptions, sectionName);
-        services.AddTransient<ApiKeyMiddleware>();
 
         return services;
     }
@@ -182,13 +179,11 @@ public static class ApiKeyExtensions
         }
         else
         {
-            services.Configure<ApiSettings>(opts => { });
-            services.Configure<DefaultApiKeyStrategyOptions>(opts =>
-            {
-                opts.ApiKeys = new List<string> { "" };
-            });
+            services.AddOptions<ApiSettings>().BindConfiguration(sectionName);
+            services.AddOptions<DefaultApiKeyStrategyOptions>()
+                .BindConfiguration($"{sectionName}:Default");
         }
-        
+
         services.TryAddScoped<IApiKeyValidator, ApiKeyValidator>();
         services.TryAddScoped<IApiKeyValidationStrategyFactory, ApiKeyValidationStrategyFactory>();
 

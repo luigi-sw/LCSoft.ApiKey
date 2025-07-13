@@ -1,13 +1,13 @@
-﻿# LC ApiKey Authorization for .NET 🔑
+﻿# LCSoft: ApiKey Authorization for .NET 
  
 *A simple and secure way to add API key authorization to your .NET APIs.*
 
-[![NuGet](https://img.shields.io/nuget/v/LCSoft.ApiKey.svg)](https://www.nuget.org/packages/LCSoft.ApiKey)  
+[![NuGet](https://img.shields.io/nuget/v/LCSoft.ApiKey.svg)](https://www.nuget.org/packages/LCSoft.ApiKey)
 [![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC_BY--NC--ND_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
 
 ---
 
-## 🚀 Features ✨  
+## Features  
 
 - ✅ Simple API key validation for ASP.NET Core Web APIs
 - ✅ Easy integration with `ASP.NET Core` (9.0+)  
@@ -27,7 +27,7 @@
 
 ---
 
-## 📦 Installation
+## Installation
 
 Install via NuGet Package Manager:
 
@@ -41,7 +41,7 @@ Or via the NuGet Package Manager Console:
 Install-Package LC.ApiKey
 ```
 
-## 🛠️ Setup
+## Setup
 
 You can use this library with controller and minimal api, as a quick setup for apikey authorization as well as a standard policy for ApiKey Token.
 
@@ -121,14 +121,14 @@ app.UseAuthorization();
 ```
 
 
-## 🔐 How It Works
+## How It Works
 
 - The package inspects the specified header (e.g., `X-API-KEY`)  
 - If the key is missing or invalid, access is denied  
 - You can easily extend the validation logic by implementing `IApiKeyValidator`  
 - The valid api key is unique and read from appsettings configuration the "ApiKey" section.
 
-## 💡 Customization
+## Customization
 
 Implement your own validation logic:
 
@@ -149,17 +149,17 @@ Then register it:
 builder.Services.AddSingleton<IApiKeyValidator, CustomApiKeyValidator>();
 ```
 
-###  Troubleshooting 🔧
+###  Troubleshooting
 
 Error: Invalid API Key → Verify the key matches in requests.
 Missing Header → Ensure clients send X-API-Key.
 
-## 🙋 Support
+## Support
 
-## 📄 License
+## License
 
 This package is licensed under CC BY-NC-ND 4.0.
 
-## ❤️ Contribute 
+## Contribute 
 Found a bug? Want a feature?
 Open an Issue or submit a PR!

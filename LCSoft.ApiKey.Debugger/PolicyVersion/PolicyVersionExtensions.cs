@@ -7,25 +7,22 @@ public static class PolicyVersionExtensions
     public static IServiceCollection RegisterUsingPolicy(
         this IServiceCollection services)
     {
-
-        services.AddAuthorizationBuilder()
-                        .AddPolicy("ApiKeyOrBearer", policy =>
-                        {
-                            policy.AddAuthenticationSchemes("Bearer", "ApiKey");
-                            policy.RequireAuthenticatedUser();
-                        });
-
         services.RegisterApiKeyPolicyAuthorization();
-        services.RegisterApiKeyPolicyAuthentication(opts => { });
         return services;
     }
-
-    public static WebApplication UsingPolicy(
-        this WebApplication app)
+    public static IServiceCollection RegisterUsingPolicyAuth(
+        this IServiceCollection services,
+        IConfiguration configuration)
     {
-        app.UseAuthentication();
-        app.UseAuthorization();
 
-        return app;
+        services.RegisterApiKeyPolicyAuthentication(opts =>
+        {
+            // You need to set a header, cannot be 'Authorization' because
+            // it is reserved for format like ApiKey <your_api_key>.
+            // There is a validation from microsoft on the format in this header.
+            // the default value will be 'Authorization' due it's the fallback.
+            opts.HeaderName = "X-API-Key";
+        });
+        return services;
     }
 }

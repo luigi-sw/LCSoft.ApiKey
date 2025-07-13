@@ -1,4 +1,6 @@
-﻿namespace LCSoft.ApiKey.Debugger.Endpoints;
+﻿using LCSoft.ApiKey.EndpointFilter;
+
+namespace LCSoft.ApiKey.Debugger.Endpoints;
 
 public static class TestEndpoints
 {
@@ -11,9 +13,6 @@ public static class TestEndpoints
 
         app.MapGet("/", () => "Hello World!");
 
-        //[ApiKey] OPT1 OPT2a
-        //[Authorize(Policy = "ApiKeyPolicy")] OPT2d
-        //[Authorize("ApiKeyOrBearer")] OPT6
         app.MapGet("/weatherforecast", () =>
         {
             var forecast = Enumerable.Range(1, 5).Select(index =>
@@ -26,9 +25,9 @@ public static class TestEndpoints
                 .ToArray();
             return forecast;
         })
-        //.AllowAnonymous()
+        //.AllowAnonymous() 
         //.RequireAuthorization()
-        //.AddEndpointFilter<ApiKeyEndpointFilter>() //OPT2c
+        .AddEndpointFilter<ApiKeyEndpointFilter>() //With Endpoint Filter, remove to use Policy
         .WithName("GetWeatherForecast");
     }
 }

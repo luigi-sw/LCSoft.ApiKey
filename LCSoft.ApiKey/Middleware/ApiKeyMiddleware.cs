@@ -3,6 +3,7 @@ using LCSoft.ApiKey.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using System.Net;
@@ -13,18 +14,15 @@ namespace LCSoft.ApiKey.Middleware;
 public class ApiKeyMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly IApiKeyValidator _apiKeyValidation;
-    private readonly ApiSettings _options;
-    public ApiKeyMiddleware(RequestDelegate next, 
-                            IApiKeyValidator apiKeyValidation,
-                            IOptions<ApiSettings> options)
+    public ApiKeyMiddleware(RequestDelegate next)
     {
         _next = next;
-        _apiKeyValidation = apiKeyValidation;
-        _options = options.Value;
     }
     public async Task InvokeAsync(HttpContext context)
     {
+        var validator = context.RequestServices.GetRequiredService<IApiKeyValidator>();
+        var options = context.RequestServices.GetRequiredService<IOptions<ApiSettings>>().Value;
+        
         var endpoint = context.GetEndpoint();
         if (endpoint != null)
         {
@@ -52,8 +50,8 @@ public class ApiKeyMiddleware
         }
 
         // Proceed with API key validation
-        var headerName = !string.IsNullOrWhiteSpace(_options.HeaderName)
-            ? _options.HeaderName
+        var headerName = !string.IsNullOrWhiteSpace(options.HeaderName)
+            ? options.HeaderName
             : Constants.ApiKeyHeaderName;
 
         bool success = context.Request.Headers.TryGetValue(headerName, out var apiKeyFromHttpHeader);
@@ -97,7 +95,7 @@ public class ApiKeyMiddleware
             return;
         }
 
-        if (!_apiKeyValidation.IsValid(apiKey).IsSuccess)
+        if (!validator.IsValid(apiKey).IsSuccess)
         {
             context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             return;

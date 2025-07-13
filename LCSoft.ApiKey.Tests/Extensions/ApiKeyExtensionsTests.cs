@@ -92,8 +92,14 @@ public class ApiKeyExtensionsTests
     [Fact]
     public void RegisterApikeyServices_WhenNoConfigurationOrOptions_ConfiguresEmptyDefaults()
     {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ApiKey:HeaderName"] = "X-Api-Key"
+            })
+        .Build();
         var services = new ServiceCollection();
-
+        services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(config);
         services.RegisterApikeyServices();
 
         var provider = services.BuildServiceProvider();
@@ -144,7 +150,7 @@ public class ApiKeyExtensionsTests
         services.RegisterApiKeyCustomAuthorization(
             configuration: null,
             configureOptions: options => options.HeaderName = "X-Test",
-            applyGlobally: false
+            applyGlobally: true
         );
 
         var provider = services.BuildServiceProvider();
@@ -182,6 +188,33 @@ public class ApiKeyExtensionsTests
 
         // Assert
         Assert.True(filterExists);
+    }
+
+    [Fact]
+    public void RegisterApiKeyCustomAuthorization_WithoutApplyGlobally_AddsFilterGlobally()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+
+        // Ativa filtro global
+        services.RegisterApiKeyCustomAuthorization(
+            configuration: null,
+            configureOptions: options => options.HeaderName = "X-Global",
+            applyGlobally: false
+        );
+
+        var provider = services.BuildServiceProvider();
+
+        // Força a configuração de MvcOptions
+        var options = provider.GetRequiredService<IOptions<MvcOptions>>();
+
+        // Act
+        var filterExists = options.Value.Filters
+            .OfType<ServiceFilterAttribute>()
+            .Any(f => f.ServiceType == typeof(CustomAuthorization));
+
+        // Assert
+        Assert.False(filterExists);
     }
 
     [Fact]

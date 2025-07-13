@@ -8,7 +8,7 @@ using System.Text.Json;
 public class ApiKeyInfo
 {
     public string Key { get; set; } = "";
-    public string Name { get; set; } = "";
+    public string Owner { get; set; } = "";
     public string[]? Roles { get; set; }
     public string[]? Scopes { get; set; }
 }
@@ -45,7 +45,7 @@ void Generate()
     var info = new ApiKeyInfo
     {
         Key = key ?? "",
-        Name = name ?? "",
+        Owner = name ?? "",
         Roles = roles,
         Scopes = scopes
     };
