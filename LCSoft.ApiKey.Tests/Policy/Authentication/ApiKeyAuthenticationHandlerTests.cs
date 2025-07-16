@@ -50,23 +50,34 @@ public class ApiKeyAuthenticationHandlerTests
     public async Task HandleAuthenticateAsync_WithValidApiKeyHeader_ReturnsSuccess()
     {
         // Arrange
-        _context.Request.Headers["X-Api-Key"] = "valid-key";
-        _validator.ValidateAndGetInfo("valid-key").Returns(Results<ApiKeyInfo>.Success(new ApiKeyInfo
+        var apiKeyInfo = new ApiKeyInfo
         {
             Owner = "test-owner",
             Roles = new[] { "Admin" },
             Scopes = new[] { "read" }
-        }));
+        };
+        var claims = new List<Claim>
+        {
+                new(ClaimTypes.Name, apiKeyInfo.Owner),
+                new(Constants.ApiKeyName, apiKeyInfo.Key)
+        };
+
+        claims.AddRange(apiKeyInfo.Roles.Select(role => new Claim(ClaimTypes.Role, role)));
+        claims.AddRange(apiKeyInfo.Scopes.Select(scope => new Claim("scope", scope)));
+        var identity = new ClaimsIdentity(claims, Constants.ApiKeyName);
+        var principal = new ClaimsPrincipal(identity);
+        _context.Request.Headers["X-Api-Key"] = "valid-key";
+        _validator.ValidateAndGetInfo("valid-key").Returns(Results<ClaimsPrincipal>.Success(principal));
 
         // Act
         var result = await _handler.AuthenticateAsync();
 
         // Assert
         Assert.True(result.Succeeded);
-        var principal = result.Principal!;
-        Assert.Equal("test-owner", principal.Identity?.Name);
-        Assert.Contains(principal.Claims, c => c.Type == ClaimTypes.Role && c.Value == "Admin");
-        Assert.Contains(principal.Claims, c => c.Type == "scope" && c.Value == "read");
+        var principalclaim = result.Principal!;
+        Assert.Equal("test-owner", principalclaim.Identity?.Name);
+        Assert.Contains(principalclaim.Claims, c => c.Type == ClaimTypes.Role && c.Value == "Admin");
+        Assert.Contains(principalclaim.Claims, c => c.Type == "scope" && c.Value == "read");
     }
 
     [Fact]
@@ -95,7 +106,7 @@ public class ApiKeyAuthenticationHandlerTests
     public async Task HandleAuthenticateAsync_WithInvalidKey_ReturnsFail()
     {
         _context.Request.Headers["X-Api-Key"] = "invalid-key";
-        _validator.ValidateAndGetInfo("invalid-key").Returns(Results<ApiKeyInfo>.Failure(StandardErrorType.GenericFailure));
+        _validator.ValidateAndGetInfo("invalid-key").Returns(Results<ClaimsPrincipal>.Failure(StandardErrorType.GenericFailure));
 
         var result = await _handler.AuthenticateAsync();
 
@@ -107,7 +118,7 @@ public class ApiKeyAuthenticationHandlerTests
     public async Task HandleAuthenticateAsync_WithNullInfo_ReturnsFail()
     {
         _context.Request.Headers["X-Api-Key"] = "valid-but-null";
-        _validator.ValidateAndGetInfo("valid-but-null").Returns(Results<ApiKeyInfo>.Failure(StandardErrorType.GenericFailure));
+        _validator.ValidateAndGetInfo("valid-but-null").Returns(Results<ClaimsPrincipal>.Failure(StandardErrorType.GenericFailure));
 
         var result = await _handler.AuthenticateAsync();
 
@@ -187,17 +198,28 @@ public class ApiKeyAuthenticationHandlerTests
     public async Task HandleAuthenticateAsync_WithAuthorizationHeaderAndValidParameter_ReturnsSuccess()
     {
         // Arrange
+        var apiKeyInfo = new ApiKeyInfo
+        {
+            Owner = "owner",
+            Roles = new[] { "admin" },
+            Scopes = new[] { "write" }
+        };
+        var claims = new List<Claim>
+        {
+                new(ClaimTypes.Name, apiKeyInfo.Owner),
+                new(Constants.ApiKeyName, apiKeyInfo.Key)
+        };
+
+        claims.AddRange(apiKeyInfo.Roles.Select(role => new Claim(ClaimTypes.Role, role)));
+        claims.AddRange(apiKeyInfo.Scopes.Select(scope => new Claim("scope", scope)));
+        var identity = new ClaimsIdentity(claims, Constants.ApiKeyName);
+        var principal = new ClaimsPrincipal(identity);
         var context = new DefaultHttpContext();
         context.Request.Headers["Authorization"] = "ApiKey my-valid-key";
         context.RequestServices = new ServiceCollection().BuildServiceProvider();
 
         var validator = Substitute.For<IApiKeyValidator>();
-        validator.ValidateAndGetInfo("my-valid-key").Returns(Results<ApiKeyInfo>.Success(new ApiKeyInfo
-        {
-            Owner = "owner",
-            Roles = new[] { "admin" },
-            Scopes = new[] { "write" }
-        }));
+        validator.ValidateAndGetInfo("my-valid-key").Returns(Results<ClaimsPrincipal>.Success(principal));
 
         var optionsMonitor = Substitute.For<IOptionsMonitor<ApiKeyAuthenticationOptions>>();
         optionsMonitor.Get(Arg.Any<string>()).Returns(new ApiKeyAuthenticationOptions()
@@ -232,7 +254,7 @@ public class ApiKeyAuthenticationHandlerTests
         context.RequestServices = new ServiceCollection().BuildServiceProvider();
 
         var validator = Substitute.For<IApiKeyValidator>();
-        validator.ValidateAndGetInfo("null-key").Returns(Results<ApiKeyInfo>.Success(null));
+        validator.ValidateAndGetInfo("null-key").Returns(Results<ClaimsPrincipal>.Success(null));
 
         var optionsMonitor = Substitute.For<IOptionsMonitor<ApiKeyAuthenticationOptions>>();
         optionsMonitor.Get(Arg.Any<string>()).Returns(new ApiKeyAuthenticationOptions
@@ -264,17 +286,26 @@ public class ApiKeyAuthenticationHandlerTests
     [Fact]
     public async Task HandleAuthenticateAsync_WhenOwnerIsEmptyDataNull_AssignsUnknown()
     {
+        var apiKeyInfo = new ApiKeyInfo
+        {
+            Owner = "Unknown", // vazio para forçar fallback
+            Roles = null,
+            Scopes = null
+        };
+        var claims = new List<Claim>
+        {
+                new(ClaimTypes.Name, apiKeyInfo.Owner),
+                new(Constants.ApiKeyName, apiKeyInfo.Key)
+        };
+
+        var identity = new ClaimsIdentity(claims, Constants.ApiKeyName);
+        var principal = new ClaimsPrincipal(identity);
         var context = new DefaultHttpContext();
         context.Request.Headers["X-Api-Key"] = "ownerless-key";
         context.RequestServices = new ServiceCollection().BuildServiceProvider();
 
         var validator = Substitute.For<IApiKeyValidator>();
-        validator.ValidateAndGetInfo("ownerless-key").Returns(Results<ApiKeyInfo>.Success(new ApiKeyInfo
-        {
-            Owner = "", // vazio para forçar fallback
-            Roles = null,
-            Scopes = null
-        }));
+        validator.ValidateAndGetInfo("ownerless-key").Returns(Results<ClaimsPrincipal>.Success(principal));
 
         var optionsMonitor = Substitute.For<IOptionsMonitor<ApiKeyAuthenticationOptions>>();
         optionsMonitor.Get(Arg.Any<string>()).Returns(new ApiKeyAuthenticationOptions

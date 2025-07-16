@@ -6,6 +6,7 @@ using LCSoft.Results;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using System.Security.Claims;
 
 namespace LCSoft.ApiKey.Tests.Extensions;
 
@@ -190,7 +191,7 @@ public class ApiKeyAuthenticationExtensionsTests
     // Fake IApiKeyValidator só para testes
     private class FakeApiKeyValidator : IApiKeyValidator { public Results<bool> IsValid(string apiKey) => true;
 
-        public Results<ApiKeyInfo> ValidateAndGetInfo(string apiKey)
+        public Results<ClaimsPrincipal> ValidateAndGetInfo(string apiKey)
         {
             throw new NotImplementedException();
         }

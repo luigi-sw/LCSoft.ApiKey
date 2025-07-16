@@ -6,7 +6,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using Microsoft.Net.Http.Headers;
 using System.Net.Http.Headers;
-using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 
@@ -72,35 +71,8 @@ internal class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthent
 
         if (apiKeyInfo.Value is null)
             return AuthenticateResult.Fail("API Key not found");
-
-        var owner = !string.IsNullOrWhiteSpace(apiKeyInfo.Value.Owner) ? apiKeyInfo.Value.Owner : "Unknown";
-        #if NET8_0_OR_GREATER
-        var roles = apiKeyInfo.Value.Roles ?? [];
-        var scopes = apiKeyInfo.Value.Scopes ?? [];
-        #else
-        var roles = apiKeyInfo.Value.Roles ?? Array.Empty<string>();
-        var scopes = apiKeyInfo.Value.Scopes ?? Array.Empty<string>();
-        #endif
-
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.Name, owner),
-            new(Constants.ApiKeyName, apiKey)
-        };
-
-        if (roles.Length > 0)
-        {
-            claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
-        }
-
-        if (scopes.Length > 0)
-        {
-            claims.AddRange(scopes.Select(scope => new Claim("scope", scope)));
-        }
-
-        var identity = new ClaimsIdentity(claims, Scheme.Name);
-        var principal = new ClaimsPrincipal(identity);
-        var ticket = new AuthenticationTicket(principal, Scheme.Name);
+       
+        var ticket = new AuthenticationTicket(apiKeyInfo.Value, Scheme.Name);
         
         return AuthenticateResult.Success(ticket);
     }

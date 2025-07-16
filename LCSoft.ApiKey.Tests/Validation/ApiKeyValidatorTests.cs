@@ -3,6 +3,7 @@ using LCSoft.ApiKey.Validation;
 using LCSoft.Results;
 using Microsoft.Extensions.Options;
 using NSubstitute;
+using System.Security.Claims;
 
 namespace LCSoft.ApiKey.Tests.Validation;
 
@@ -64,7 +65,18 @@ public class ApiKeyValidatorTests
             Scopes = new[] { "read", "write" }
         };
 
-        var expected = Results<ApiKeyInfo>.Success(apiKeyInfo);
+        var claims = new List<Claim>
+        {
+                new(ClaimTypes.Name, apiKeyInfo.Owner),
+                new(Constants.ApiKeyName, apiKeyInfo.Key)
+        };
+
+        claims.AddRange(apiKeyInfo.Roles.Select(role => new Claim(ClaimTypes.Role, role)));
+        claims.AddRange(apiKeyInfo.Scopes.Select(scope => new Claim("scope", scope)));
+        var identity = new ClaimsIdentity(claims, Constants.ApiKeyName);
+        var principal = new ClaimsPrincipal(identity);
+
+        var expected = Results<ClaimsPrincipal>.Success(principal);
 
         var strategy = Substitute.For<IApiKeyValidationStrategy>();
         strategy.ValidateAndGetInfo("valid-key").Returns(expected);

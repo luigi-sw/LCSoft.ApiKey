@@ -1,23 +1,37 @@
 ﻿# LCSoft: ApiKey Authorization for .NET 
- 
-*A simple and secure way to add API key authorization to your .NET APIs.*
+
+This library provides a flexible, extensible, and resilient API key authorization system for .NET applications. Built with the strategy pattern at its core, it offers multiple integration approaches while maintaining clean separation of concerns and robust error handling.
 
 [![NuGet](https://img.shields.io/nuget/v/LCSoft.ApiKey.svg)](https://www.nuget.org/packages/LCSoft.ApiKey)
 [![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC_BY--NC--ND_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
 
 ---
 
+## Design Philosophy
+
+The library is designed around three core principles:
+
+**Flexibility:** Multiple integration options including attributes, middleware, endpoint filters, and authorization/authentication policies to fit any application architecture.
+
+**Extensibility:** Strategy-based validation system that allows custom validation logic while maintaining a consistent interface.
+
+**Resilience:** Built-in fallback mechanisms and comprehensive error handling to ensure your application remains stable even when configuration issues occur.
+
 ## Features  
 
-- ✅ Simple API key validation for ASP.NET Core Web APIs
-- ✅ Easy integration with `ASP.NET Core` (9.0+)  
+- ✅ Full-featured API key authorization framework
+- ✅ Easy integration with `.NET` (6.0+)  
 - ✅ Lightweight and extensible  
-- ✅ Supports API key validation via:  
-   - Header (`X-API-Key`)  
-   - Custom providers  
-- ✅ Support for custom header names  
-- ✅ Optional in-memory or configurable key storage   
-- ✅ Minimal setup required  
+- ✅ Supports API key validation through:  
+   - Attributes 
+   - Endpoint Filter  
+   - Middleware
+   - Authorization Policy
+   - Authentication Policy
+- ✅ Support for custom header names    
+- ✅ Flexible setup with dependency injection  
+- ✅ Extensible validation strategies
+- ✅ Easy configuration
 
 ### Implemented Patterns
  - Strategy Pattern ✅
@@ -43,7 +57,7 @@ Install-Package LC.ApiKey
 
 ## Setup
 
-You can use this library with controller and minimal api, as a quick setup for apikey authorization as well as a standard policy for ApiKey Token.
+This library integrates seamlessly with both MVC controllers and minimal APIs. Use it for quick API key authorization setup or integrate it as a standard policy for API key authentication.
 
 ### 1. Add as basic services
 

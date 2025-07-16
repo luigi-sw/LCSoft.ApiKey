@@ -1,5 +1,5 @@
-﻿using LCSoft.ApiKey.Models;
-using LCSoft.Results;
+﻿using LCSoft.Results;
+using System.Security.Claims;
 
 namespace LCSoft.ApiKey.Validation;
 
@@ -22,5 +22,5 @@ public interface IApiKeyValidationStrategy
     /// </summary>
     /// <param name="apiKey"></param>
     /// <returns>Results<ApiKeyInfo></returns>
-    Results<ApiKeyInfo> ValidateAndGetInfo(string apiKey);
+    Results<ClaimsPrincipal> ValidateAndGetInfo(string apiKey);
 }

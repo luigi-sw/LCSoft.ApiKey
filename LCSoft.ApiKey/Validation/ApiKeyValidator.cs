@@ -1,6 +1,7 @@
 ﻿using LCSoft.ApiKey.Models;
 using LCSoft.Results;
 using Microsoft.Extensions.Options;
+using System.Security.Claims;
 
 namespace LCSoft.ApiKey.Validation;
 
@@ -17,6 +18,6 @@ internal class ApiKeyValidator : IApiKeyValidator
 
     public Results<bool> IsValid(string apiKey) => _strategy.IsValid(apiKey);
 
-    public Results<ApiKeyInfo> ValidateAndGetInfo(string apiKey)
+    public Results<ClaimsPrincipal> ValidateAndGetInfo(string apiKey)
         => _strategy.ValidateAndGetInfo(apiKey);
 }
