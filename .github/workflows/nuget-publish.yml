@@ -1,0 +1,222 @@
+name: Publish NuGet Package
+on:
+  push:
+    branches:
+     - release/**
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (e.g. v1.0.0)'
+        required: true
+      description:
+        description: 'Release description (markdown supported)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+
+  build:
+    if: github.event_name == 'push'
+    
+    env:
+      PROJ_PATH: ./LCSoft.ApiKey/LCSoft.ApiKey.csproj
+      PACKAGE_OUTPUT_PATH: ${{ github.workspace }}\output
+      NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+    
+    runs-on: windows-latest
+    #runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.x'
+
+      - name: Restore dependencies
+        run: dotnet restore ${{ env.PROJ_PATH }}
+
+      - name: Build
+        run: dotnet build ${{ env.PROJ_PATH }} --configuration Release --no-restore
+
+      - name: Run Tests
+        run: dotnet test --configuration Release --no-build --verbosity normal
+
+      - name: Clean up existing artifact (if re-run)
+        run: rm -rf ${{ env.PACKAGE_OUTPUT_PATH }}
+
+      - name: Pack NuGet package
+        run: dotnet pack ${{ env.PROJ_PATH }} --configuration Release --output ${{ env.PACKAGE_OUTPUT_PATH }} --no-build
+
+      - name: List package files before release
+        run: ls -la ${{ env.PACKAGE_OUTPUT_PATH }}
+
+      - name: Upload Package Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nupkg
+          path: ${{ env.PACKAGE_OUTPUT_PATH }}\*.nupkg
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: nupkg
+          path: ${{ env.PACKAGE_OUTPUT_PATH }}
+
+      - name: List package files before release
+        run: ls -la ${{ env.PACKAGE_OUTPUT_PATH }}
+
+      - name: Determine release type
+        id: release_type
+        run: |
+          if [ "${{ github.event.inputs.test_release }}" == "true" ]; then
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+            echo "draft=false" >> $GITHUB_OUTPUT
+          else
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+            echo "draft=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Set version
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version_override }}" ]; then
+            VERSION="${{ github.event.inputs.version_override }}"
+            echo "Using override version: $VERSION"
+          else
+            # Extract version from CHANGELOG.md
+            VERSION=$(grep -m1 -Po '^## \[\K[^\]]+' CHANGELOG.md)
+            echo "Using changelog version: $VERSION" 
+          fi
+
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+          echo "Final cleaned VERSION: '$VERSION'"
+
+      - name: Extract latest version and changelog section
+        id: changelog
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          
+          # Extract all lines before the first '## [' (intro section), excluding the first line
+          awk 'NR>1 && /^## \[/{exit} NR>1 {print}' CHANGELOG.md > _intro.txt
+
+          if [ -n "${{ github.event.inputs.version_override }}" ]; then
+            echo "Manual release - creating simple changelog entry"
+            {
+              echo "### Changes"
+              echo "- Manual release of version $VERSION"
+              if [ "${{ github.event.inputs.test_release }}" == "true" ]; then
+                echo "- This is a test/prerelease version"
+              fi
+            } > _section.txt
+          else
+            # Extract changelog notes for the version from CHANGELOG.md
+            if grep -q "## \[$VERSION\]" CHANGELOG.md; then
+              echo "Found changelog section for version $VERSION"
+              sed -n "/^## \[$VERSION\]/,/^## \[/p" CHANGELOG.md | sed '$d' > _section.txt
+              #echo "Matching pattern: '/^## \\[$VERSION\\]/'"
+              #grep -n "## \[" CHANGELOG.md  # Show all version headers with line numbers
+            else
+              echo "No changelog section found for version $VERSION"
+              echo "- No changelog entries found for this version" > _section.txt
+            fi
+          fi
+              
+          # Combine everything into final body
+          {
+            echo "## Release Notes"
+            echo ""
+            cat _intro.txt
+            echo ""
+            cat _section.txt
+            echo ""
+            echo "---"
+            echo "[Changelog](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)"
+          } > final_body.txt
+
+          echo "BODY<<EOF" >> $GITHUB_OUTPUT
+          cat final_body.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      #- name: Debug extracted changelog section
+      #  run: |
+      #    echo "Extracted section:"
+      #    cat _section.txt
+
+      - name: Check if tag already exists
+        id: tagcheck
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          TAG="v$VERSION"
+          
+          if git ls-remote --tags origin | grep -q "refs/tags/$TAG"; then
+            echo "Tag $TAG already exists."
+            if [ "${{ github.event.inputs.test_release }}" == "true" ]; then
+              echo "Test release - will skip creation"
+              echo "EXISTS=true" >> $GITHUB_OUTPUT
+            else
+              echo "Production release - tag conflict!"
+              echo "EXISTS=true" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "Tag $TAG does not exist. Proceeding with release."
+            echo "EXISTS=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Git Tag
+        if: steps.tagcheck.outputs.EXISTS == 'false'
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git tag -a "v${{ steps.version.outputs.VERSION }}" -m "Release v${{ steps.version.outputs.VERSION }}"
+          git push origin "v${{ steps.version.outputs.VERSION }}"
+
+      - name: Create GitHub Release
+        if: steps.tagcheck.outputs.EXISTS == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.VERSION }}
+          name: v${{ steps.version.outputs.VERSION }}
+          body: ${{ steps.changelog.outputs.BODY }}
+          files: ${{ env.PACKAGE_OUTPUT_PATH }}\*.nupkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: nupkg
+          path: ${{ env.PACKAGE_OUTPUT_PATH }}
+
+      - name: List package files before release
+        run: ls -la ${{ env.PACKAGE_OUTPUT_PATH }}
+
+      # -------- GITHUB PACKAGE PUBLISH --------
+      - name: Push to GitHub NuGet Registry
+        run: dotnet nuget push ${{ env.PACKAGE_OUTPUT_PATH }}\*.nupkg --skip-duplicate --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
+      #  env:
+      #    NUGET_AUTH_TOKEN: ${{ secrets.MY_TOKEN }}
+
+      # -------- OPTIONAL: NUGET.ORG PUBLISH --------
+      #- name: Push to NuGet.org
+      #  if: ${{ env.NUGET_API_KEY != '' }}
+      #  run: dotnet nuget push ${{ env.PACKAGE_OUTPUT_PATH }}\*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ env.NUGET_API_KEY }}
