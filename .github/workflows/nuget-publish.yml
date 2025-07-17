@@ -63,6 +63,8 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
+    env:
+      PACKAGE_OUTPUT_PATH: ${{ github.workspace }}/output
     steps:
 
       - name: Checkout
@@ -190,13 +192,15 @@ jobs:
           tag_name: v${{ steps.version.outputs.VERSION }}
           name: v${{ steps.version.outputs.VERSION }}
           body: ${{ steps.changelog.outputs.BODY }}
-          files: ${{ env.PACKAGE_OUTPUT_PATH }}\*.nupkg
+          files: ${{ env.PACKAGE_OUTPUT_PATH }}/*.nupkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish:
     needs: release
     runs-on: ubuntu-latest
+    env:
+      PACKAGE_OUTPUT_PATH: ${{ github.workspace }}/output
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -212,11 +216,11 @@ jobs:
 
       # -------- GITHUB PACKAGE PUBLISH --------
       - name: Push to GitHub NuGet Registry
-        run: dotnet nuget push ${{ env.PACKAGE_OUTPUT_PATH }}\*.nupkg --skip-duplicate --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
+        run: dotnet nuget push ${{ env.PACKAGE_OUTPUT_PATH }}/*.nupkg --skip-duplicate --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
       #  env:
       #    NUGET_AUTH_TOKEN: ${{ secrets.MY_TOKEN }}
 
       # -------- OPTIONAL: NUGET.ORG PUBLISH --------
       #- name: Push to NuGet.org
       #  if: ${{ env.NUGET_API_KEY != '' }}
-      #  run: dotnet nuget push ${{ env.PACKAGE_OUTPUT_PATH }}\*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ env.NUGET_API_KEY }}
+      #  run: dotnet nuget push ${{ env.PACKAGE_OUTPUT_PATH }}/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ env.NUGET_API_KEY }}
