@@ -1,6 +1,11 @@
 ﻿namespace LCSoft.ApiKey.Models;
 
-public class ApiKeyHeaderMetadata(string headerName)
+public class ApiKeyHeaderMetadata
 {
-    public string HeaderName { get; } = headerName;
+    public string HeaderName { get; }
+
+    public ApiKeyHeaderMetadata(string headerName)
+    {
+        HeaderName = headerName;
+    }
 }

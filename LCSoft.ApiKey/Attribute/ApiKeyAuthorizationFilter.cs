@@ -58,7 +58,7 @@ internal class ApiKeyAuthorizationFilter : IAuthorizationFilter
             return;
         }
 
-        if (!_apiKeyValidator.IsValid(apiKey))
+        if (!_apiKeyValidator.IsValid(apiKey).IsSuccess)
         {
             context.Result = new UnauthorizedResult();
         }

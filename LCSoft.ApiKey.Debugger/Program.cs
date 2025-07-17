@@ -1,33 +1,71 @@
+// Using Controllers:
+
+// 1 - Using a Custom Api Key Attribute
+//#define WITHCONTROLLER_CustomApiKeyAttribute
+//#define WITHCONTROLLER
+
+// 2 - Using ApiKeyOrCustomAuthorizationAttribute
+//#define WITHCONTROLLER_ApiKeyOrCustomAuthorizationAttribute
+//#define WITHCONTROLLER
+
+// 3 - Using Endpoints with Filter
+//#define WITHENDPOINTS
+
+// 4 - Using Middleware
+//#define WITHMIDDLEWARE
+
+// 5 - Using Policy for Authorization
+//#define WITHPOLICY_AUTHORIZATION
+//#define WITHCONTROLLER
+//#define MINIMALAPI
+
+// 6 - Using Policy for Authentication
+//#define WITHPOLICY_AUTHENTICATION
+//#define WITHCONTROLLER
+//#define MINIMALAPI
+using LCSoft.ApiKey.Debugger.AttributeVersion;
 using LCSoft.ApiKey.Extensions;
-using LCSoft.ApiKey.Middleware;
+using LCSoft.ApiKey.Debugger.EndpointFilterVersion;
+using LCSoft.ApiKey.Debugger.Endpoints;
+using LCSoft.ApiKey.Debugger.MiddlewareVersion;
+using LCSoft.ApiKey.Debugger.PolicyVersion;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 
-
-//OPT5
-//builder.Services.AddDbContext<AppDbContext>(options =>
-//    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-//builder.Services.Configure<ApiSettings>(builder.Configuration.GetSection("ApiSettings"));
-
-
-//builder.Services.AddAuthorizationBuilder()
-//                .AddPolicy("ApiKeyOrBearer", policy =>
-//                {
-//                    policy.AddAuthenticationSchemes("Bearer", "ApiKey");
-//                    policy.RequireAuthenticatedUser();
-//                });
-
-//builder.Services.AddControllers(options =>
-//{
-//    var policy = new AuthorizationPolicyBuilder()
-//        .RequireAuthenticatedUser()
-//        .Build();
-//    options.Filters.Add(new AuthorizeFilter(policy));
-//});
-
+#if WITHCONTROLLER_CustomApiKeyAttribute
+builder.Services.AddControllers();
 builder.Services.RegisterApikeyServices();
+#endif
+
+#if WITHCONTROLLER_ApiKeyOrCustomAuthorizationAttribute
+builder.Services.RegisterUsingAttributes(false);
+#endif
+
+#if WITHENDPOINTS
+builder.Services.RegisterUsingEndointsFilter();
+#endif
+
+#if WITHMIDDLEWARE
+builder.Services.RegisterUsingMiddleware();
+#endif
+
+#if WITHPOLICY_AUTHORIZATION
+builder.Services.RegisterUsingPolicy();
+
+#if WITHPOLICY_AUTHORIZATION && WITHCONTROLLER
+builder.Services.AddControllers();
+#endif
+#endif
+
+#if WITHPOLICY_AUTHENTICATION
+builder.Services.RegisterUsingPolicyAuth(builder.Configuration);
+
+#if WITHPOLICY_AUTHENTICATION && WITHCONTROLLER
+builder.Services.AddControllers();
+#endif
+#endif
 
 var app = builder.Build();
 
@@ -38,40 +76,64 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-//OPT2b
-//app.UseMiddleware<ApiKeyMiddleware>();
+#if WITHENDPOINTS
+app.MapTestEndpoints();
+#endif
 
-var summaries = new[]
+#if WITHCONTROLLER
+app.MapControllers();
+#endif
+
+#if WITHMIDDLEWARE
+app.UsingMiddleware();
+
+app.MapGet("/UsingMiddleware", () =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    var forecasts = new[]
+    {
+        new WeatherForecast(DateOnly.FromDateTime(DateTime.Now), 25, "Sunny"),
+        new WeatherForecast(DateOnly.FromDateTime(DateTime.Now.AddDays(1)), 20, "Cloudy"),
+        new WeatherForecast(DateOnly.FromDateTime(DateTime.Now.AddDays(2)), 15, "Rainy")
+    };
+    return forecasts;
+});
+#endif
 
-//app.UseAuthentication();
-//app.UseAuthorization();
+#if WITHPOLICY_AUTHORIZATION
+// Testing with Controllers
 
-app.UseMiddleware<ApiKeyMiddleware>();
-
-app.MapGet("/", () => "Hello World!");
-
-//[ApiKey] OPT1 OPT2a
-//[Authorize(Policy = "ApiKeyPolicy")] OPT2d
-//[Authorize("ApiKeyOrBearer")] OPT6
-app.MapGet("/weatherforecast", () =>
+// Testing with MinimalApis
+#if WITHPOLICY_AUTHORIZATION && MINIMALAPI
+app.MapGet("/UsingAuthorizationPolicy", () =>
 {
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-//.AllowAnonymous()
-//.RequireAuthorization()
-//.AddEndpointFilter<ApiKeyEndpointFilter>() //OPT2c
-.WithName("GetWeatherForecast");
+    var forecasts = new[]
+    {
+        new WeatherForecast(DateOnly.FromDateTime(DateTime.Now), 25, "Sunny"),
+        new WeatherForecast(DateOnly.FromDateTime(DateTime.Now.AddDays(1)), 20, "Cloudy"),
+        new WeatherForecast(DateOnly.FromDateTime(DateTime.Now.AddDays(2)), 15, "Rainy")
+    };
+    return forecasts;
+}).RequireAuthorization();
+#endif
+#endif
+
+#if WITHPOLICY_AUTHENTICATION
+// Testing with Controllers
+
+// Testing with MinimalApis
+#if WITHPOLICY_AUTHENTICATION && MINIMALAPI
+app.MapGet("/UsingAuthorizationPolicy", () =>
+{
+    var forecasts = new[]
+    {
+        new WeatherForecast(DateOnly.FromDateTime(DateTime.Now), 25, "Sunny"),
+        new WeatherForecast(DateOnly.FromDateTime(DateTime.Now.AddDays(1)), 20, "Cloudy"),
+        new WeatherForecast(DateOnly.FromDateTime(DateTime.Now.AddDays(2)), 15, "Rainy")
+    };
+    return forecasts;
+}).RequireAuthorization();
+#endif
+#endif
 
 app.Run();
 

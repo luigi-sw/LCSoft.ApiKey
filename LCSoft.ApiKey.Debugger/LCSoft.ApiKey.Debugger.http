@@ -1,11 +1,59 @@
 @LC.ApiKey.Auth_HostAddress = http://localhost:5217
 
+# Test Controller with Custom Attribute
+GET {{LC.ApiKey.Auth_HostAddress}}/CustomAuthorization/
+Accept: application/json
+X-API-Key: 6CBxzdYcEgNDrRhMbDpkBF7e4d4Kib46dwL9ZE5egiL0iL5Y3dzREUBSUYVUwUkN
+
+
+###
+# Test Controller with ApiKey Attribute
+GET {{LC.ApiKey.Auth_HostAddress}}/ApiKey/
+Accept: application/json
+X-API-Key: 6CBxzdYcEgNDrRhMbDpkBF7e4d4Kib46dwL9ZE5egiL0iL5Y3dzREUBSUYVUwUkN
+
+
+###
+# Test Controller with CustomApiKey Attribute
+GET {{LC.ApiKey.Auth_HostAddress}}/CustomApiKey/
+Accept: application/json
+X-API-Key: 6CBxzdYcEgNDrRhMbDpkBF7e4d4Kib46dwL9ZE5egiL0iL5Y3dzREUBSUYVUwUkN
+
+
+###
+# Test Controller with Endpoint Filter
 GET {{LC.ApiKey.Auth_HostAddress}}/weatherforecast/
 Accept: application/json
 X-API-Key: 6CBxzdYcEgNDrRhMbDpkBF7e4d4Kib46dwL9ZE5egiL0iL5Y3dzREUBSUYVUwUkN
 
 
 ###
-#X-API-Key: 6CBxzdYcEgNDrRhMbDpkBF7e4d4Kib46dwL9ZE5egiL0iL5Y3dzREUBSUYVUwUkN
-#X-API-Key: my-secret-key
-#Authorization: Bearer 6CBxzdYcEgNDrRhMbDpkBF7e4d4Kib46dwL9ZE5egiL0iL5Y3dzREUBSUYVUwUkN
+# Test Controller with Middleware
+GET {{LC.ApiKey.Auth_HostAddress}}/UsingMiddleware/
+Accept: application/json
+X-API-Key: 6CBxzdYcEgNDrRhMbDpkBF7e4d4Kib46dwL9ZE5egiL0iL5Y3dzREUBSUYVUwUkN
+
+
+###
+# Test Controller with Policy Authorization with Minimal Api
+GET {{LC.ApiKey.Auth_HostAddress}}/UsingAuthorizationPolicy/
+Accept: application/json
+X-API-Key: 6CBxzdYcEgNDrRhMbDpkBF7e4d4Kib46dwL9ZE5egiL0iL5Y3dzREUBSUYVUwUkN
+
+
+###
+# Test Controller with Policy Authorization with Controllers
+GET {{LC.ApiKey.Auth_HostAddress}}/PolicyAuthorization/
+Accept: application/json
+X-API-Key: 6CBxzdYcEgNDrRhMbDpkBF7e4d4Kib46dwL9ZE5egiL0iL5Y3dzREUBSUYVUwUkN
+
+###
+# Test Controller with Policy Authentication with Controllers
+GET {{LC.ApiKey.Auth_HostAddress}}/PolicyAuthorization/
+Accept: application/json
+X-API-Key: eyJLZXkiOiJUZXN0ZSIsIk5hbWUiOiJMdWlnaSIsIlJvbGVzIjpbIkFkbWluIl0sIlNjb3BlcyI6WyJXcml0ZSJdfQ==
+
+##X-API-Key: eyJLZXkiOiJUZXN0ZSIsIk5hbWUiOiJMdWlnaSIsIlJvbGVzIjpbIkFkbWluIl0sIlNjb3BlcyI6WyJXcml0ZSJdfQ==
+
+##Authorization: Apikey eyJLZXkiOiJUZXN0ZSIsIk5hbWUiOiJMdWlnaSIsIlJvbGVzIjpbIkFkbWluIl0sIlNjb3BlcyI6WyJXcml0ZSJdfQ==
+##X-API-Key: 6CBxzdYcEgNDrRhMbDpkBF7e4d4Kib46dwL9ZE5egiL0iL5Y3dzREUBSUYVUwUkN

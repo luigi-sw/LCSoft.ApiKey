@@ -6,13 +6,6 @@ namespace LCSoft.ApiKey.Policy.Authentication;
 public class ApiKeyAuthenticationOptions : AuthenticationSchemeOptions
 {
     /// <summary>
-    /// Api Key Value, value to be comparared, need to be register.
-    /// Default: null
-    /// </summary>
-    /// <value></value>
-    public string? ApiKey { get; set; }
-
-    /// <summary>
     /// Scheme name, the authentication scheme.
     /// Default: ApiKeyScheme
     /// </summary>

@@ -39,45 +39,54 @@ public class CustomAuthorization : System.Attribute, IAuthorizationFilter
                 ? options.HeaderName
                 : Constants.ApiKeyHeaderName;
 
-        if (headers.TryGetValue(authorizationHeader, out var authTokens))
+        if (headers.TryGetValue(authorizationHeader, out var authTokens)
+            && !string.IsNullOrWhiteSpace(authTokens.FirstOrDefault()))
         {
-            authToken = authTokens.FirstOrDefault();
-            if (!string.IsNullOrWhiteSpace(authToken))
+            var firstToken = authTokens.FirstOrDefault();
+            if (AuthenticationHeaderValue.TryParse(firstToken, out var authHeaderValue))
             {
-                if (!apiKeyValidator!.IsValid(authToken))
+                if (authHeaderValue.Scheme.Equals(Constants.ApiKeyName, StringComparison.OrdinalIgnoreCase))
                 {
-                    SetForbiddenResult(filterContext, "The Api key is incorrect : Unauthorized access");
-                    return;
+                    authToken = authHeaderValue.Parameter;
+                    if (!string.IsNullOrWhiteSpace(authToken))
+                    {
+                        if (!apiKeyValidator!.IsValid(authToken).IsSuccess)
+                        {
+                            SetForbiddenResult(filterContext, "The Api key is incorrect : Unauthorized access");
+                            return;
+                        }
+                        return;
+                    }
                 }
-            }
-        }
-        else if (AuthenticationHeaderValue.TryParse(authorizationHeader, out var authHeaderValue))
-        {
-            if (authHeaderValue.Scheme.Equals(Constants.ApiKeyName, StringComparison.OrdinalIgnoreCase))
-            {
-                authToken = authHeaderValue.Parameter;
-                if (!string.IsNullOrWhiteSpace(authToken))
+                else if (!string.IsNullOrWhiteSpace(firstToken))
                 {
-                    if (!apiKeyValidator!.IsValid(authToken))
+                    authToken = firstToken;
+                    if (!apiKeyValidator!.IsValid(authToken).IsSuccess)
                     {
                         SetForbiddenResult(filterContext, "The Api key is incorrect : Unauthorized access");
                         return;
                     }
+                    return;
                 }
             }
         }
-        else
+
+        //if the request header doesn't contain the authorization header, try to get the API-Key.
+        if (headers.TryGetValue(apiKeyHeader, out var apiKeyTokens))
         {
-            //if the request header doesn't contain the authorization header, try to get the API-Key.
-            headers.TryGetValue(apiKeyHeader, out var apiKeyTokens);
             var apiKeyValue = apiKeyTokens.FirstOrDefault();
 
             //if the API-Key value is not null. validate the API-Key.  
-            if (string.IsNullOrWhiteSpace(apiKeyValue) || !apiKeyValidator.IsValid(apiKeyValue!))
+            if (string.IsNullOrWhiteSpace(apiKeyValue) || !apiKeyValidator.IsValid(apiKeyValue!).IsSuccess)
             {
                 SetForbiddenResult(filterContext, "Please Provide valid auth Token");
                 return;
             }
+        }
+        else
+        {
+            SetForbiddenResult(filterContext, "Please Provide valid auth Token");
+            return;
         }
     }
 

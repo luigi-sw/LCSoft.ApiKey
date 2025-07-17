@@ -3,8 +3,13 @@ using System.Security.Claims;
 
 namespace LCSoft.ApiKey.Validation;
 
-public interface IApiKeyValidator
+public interface IApiKeyValidationStrategy
 {
+    /// <summary>
+    /// Name of the strategy, used to identify the strategy.
+    /// </summary>
+    string Name { get; }
+
     /// <summary>
     /// Validate if the apiKey is valid.
     /// </summary>

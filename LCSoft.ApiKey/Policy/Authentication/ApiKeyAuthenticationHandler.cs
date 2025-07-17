@@ -1,5 +1,4 @@
-﻿using LCSoft.ApiKey;
-using LCSoft.ApiKey.Validation;
+﻿using LCSoft.ApiKey.Validation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -7,7 +6,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using Microsoft.Net.Http.Headers;
 using System.Net.Http.Headers;
-using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 
@@ -17,6 +15,18 @@ internal class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthent
 {
     private readonly IApiKeyValidator _apiKeyValidator;
 
+    #if NET6_0 || NET7_0
+    public ApiKeyAuthenticationHandler(
+        IOptionsMonitor<ApiKeyAuthenticationOptions> options,
+        ILoggerFactory logger,
+        UrlEncoder encoder,
+        ISystemClock clock,
+        IApiKeyValidator apiKeyValidator)
+        : base(options, logger, encoder, clock)
+    {
+        _apiKeyValidator = apiKeyValidator;
+    }
+    #else
     public ApiKeyAuthenticationHandler(IOptionsMonitor<ApiKeyAuthenticationOptions> options,
                                        ILoggerFactory logger,
                                        IApiKeyValidator apiKeyValidator,
@@ -25,6 +35,8 @@ internal class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthent
     {
         _apiKeyValidator = apiKeyValidator;
     }
+    #endif
+
 
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
@@ -38,7 +50,7 @@ internal class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthent
         }
         else if (Request.Headers.TryGetValue(HeaderNames.Authorization, out var authHeader) &&
                  AuthenticationHeaderValue.TryParse(authHeader, out AuthenticationHeaderValue? headerValue) &&
-                 headerValue.Scheme.Equals(Constants.Scheme, StringComparison.OrdinalIgnoreCase))
+                 headerValue.Scheme.Equals(Constants.ApiKeyName, StringComparison.OrdinalIgnoreCase))
         {
             if (headerValue.Parameter is null)
             {
@@ -59,30 +71,8 @@ internal class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthent
 
         if (apiKeyInfo.Value is null)
             return AuthenticateResult.Fail("API Key not found");
-
-        var owner = !string.IsNullOrWhiteSpace(apiKeyInfo.Value.Owner) ? apiKeyInfo.Value.Owner : "Unknown";
-        var roles = apiKeyInfo.Value.Roles ?? [];
-        var scopes = apiKeyInfo.Value.Scopes ?? [];
-
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.Name, owner),
-            new(Constants.ApiKeyName, apiKey)
-        };
-
-        if (roles?.Length > 0)
-        {
-            claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
-        }
-
-        if (scopes?.Length > 0)
-        {
-            claims.AddRange(scopes.Select(scope => new Claim("scope", scope)));
-        }
-
-        var identity = new ClaimsIdentity(claims, Scheme.Name);
-        var principal = new ClaimsPrincipal(identity);
-        var ticket = new AuthenticationTicket(principal, Scheme.Name);
+       
+        var ticket = new AuthenticationTicket(apiKeyInfo.Value, Scheme.Name);
         
         return AuthenticateResult.Success(ticket);
     }
