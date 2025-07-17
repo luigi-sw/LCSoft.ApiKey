@@ -38,7 +38,6 @@
   <ItemGroup>
 	<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	<PackageReference Include="LCSoft.Results" Version="0.1.2" />
-    <!--<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.4" />-->
   </ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">

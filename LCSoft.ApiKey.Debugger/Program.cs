@@ -20,8 +20,8 @@
 //#define MINIMALAPI
 
 // 6 - Using Policy for Authentication
-#define WITHPOLICY_AUTHENTICATION
-#define WITHCONTROLLER
+//#define WITHPOLICY_AUTHENTICATION
+//#define WITHCONTROLLER
 //#define MINIMALAPI
 using LCSoft.ApiKey.Debugger.AttributeVersion;
 using LCSoft.ApiKey.Extensions;
