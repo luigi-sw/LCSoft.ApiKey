@@ -222,6 +222,6 @@ jobs:
       #    NUGET_AUTH_TOKEN: ${{ secrets.MY_TOKEN }}
 
       # -------- OPTIONAL: NUGET.ORG PUBLISH --------
-      #- name: Push to NuGet.org
-      #  if: ${{ env.NUGET_API_KEY != '' }}
-      #  run: dotnet nuget push ${{ env.PACKAGE_OUTPUT_PATH }}/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ env.NUGET_API_KEY }}
+      - name: Push to NuGet.org
+        if: ${{ env.NUGET_API_KEY != '' }}
+        run: dotnet nuget push ${{ env.PACKAGE_OUTPUT_PATH }}/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ env.NUGET_API_KEY }}
